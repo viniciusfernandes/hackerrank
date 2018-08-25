@@ -1,67 +1,116 @@
-package br.com.vinicius.hackerrank.euler215.table;
+package br.com.vinicius.hackerrank.euler215.table.symmetrical;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 class Brick {
-	List<Long> bitLines = null;
+	long BIT_WIDTH = 1;
+	List<Brick> bitLines = null;
+
+	List<Brick> bitLinesSym = null;
 
 	long bits = 1;
+
 	Brick bLeft;
 	Brick bRight;
+	Brick bSym;
 	long height = 0;
 	long totWidth = 0;
 	int width = 0;
 
-	private void generate(Brick bParent, long maxWidth) {
+	@Override
+	public boolean equals(Object o) {
+		return o instanceof Brick && ((Brick) o).bits == this.bits;
+
+	}
+
+	private void generate(Brick bParent, long width) {
 		Brick bLeft = new Brick();
 		Brick bRight = new Brick();
 
+		bLeft.bSym = new Brick();
+		bRight.bSym = new Brick();
+		bLeft.bSym.bits = BIT_WIDTH;
+		bRight.bSym.bits = BIT_WIDTH;
+
 		bLeft.width = 2;
 		bRight.width = 3;
+		bLeft.bSym.width = 2;
+		bRight.bSym.width = 3;
 
 		bParent.bLeft = bLeft;
 		bParent.bRight = bRight;
+		bParent.bLeft.bSym = bLeft.bSym;
+		bParent.bRight.bSym = bRight.bSym;
 
 		bLeft.totWidth = bLeft.width + bParent.totWidth;
 		bRight.totWidth = bRight.width + bParent.totWidth;
+		bLeft.bSym.totWidth = bLeft.bSym.width + bParent.bSym.totWidth;
+		bRight.bSym.totWidth = bRight.bSym.width + bParent.bSym.totWidth;
 
 		bLeft.bits = bLeft.bits << bLeft.totWidth;
 		bLeft.bits = bLeft.bits | bParent.bits;
+		bLeft.bSym.bits = bLeft.bSym.bits >> bLeft.bSym.totWidth;
+		bLeft.bSym.bits = bLeft.bSym.bits | bParent.bSym.bits;
 
 		bRight.bits = bRight.bits << bRight.totWidth;
 		bRight.bits = bRight.bits | bParent.bits;
+		bRight.bSym.bits = bRight.bSym.bits >> bRight.bSym.totWidth;
+		bRight.bSym.bits = bRight.bSym.bits | bParent.bSym.bits;
 
-		if (bLeft.totWidth < maxWidth) {
-			generate(bLeft, maxWidth);
-		} else if (bLeft.totWidth == maxWidth) {
+		if (bLeft.totWidth < width) {
+			generate(bLeft, width);
+		} else if (bLeft.totWidth == width) {
 			bLeft.bits = bParent.bits;
-			bitLines.add(bLeft.bits);
+			// Nao sei o porque, mas subtraindo uma unidade tudo esta de acordo.
+			bLeft.bSym.bits = bParent.bSym.bits - 1;
+			bitLinesSym.add(bLeft);
 		}
 
-		if (bRight.totWidth < maxWidth) {
-			generate(bRight, maxWidth);
-		} else if (bRight.totWidth == maxWidth) {
+		if (bRight.totWidth < width) {
+			generate(bRight, width);
+		} else if (bRight.totWidth == width) {
 			bRight.bits = bParent.bits;
-			bitLines.add(bRight.bits);
+			// Nao sei o porque, mas subtraindo uma unidade tudo esta de
+			// acordo.
+			bRight.bSym.bits = bParent.bSym.bits - 1;
+			bitLinesSym.add(bRight);
 		}
 	}
 
 	protected void generate(int width) {
-		bitLines = new ArrayList<>(width);
+		bitLines = new LinkedList<>();
 		Brick b = new Brick();
 		b.bits = 0;
+		b.bSym = new Brick();
+
+		BIT_WIDTH = (long) Math.pow(2, width);
 		generate(b, width);
+
+		for (Brick bc : bitLinesSym) {
+			if (bc.bSym != null && !bitLines.contains(bc.bSym)) {
+				bitLines.add(bc);
+			}
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return (int) bits;
+	}
+
+	public boolean hasSymmetric() {
+		return bSym != null && bSym.bits != this.bits;
 	}
 
 	public String linesToString() {
 		StringBuilder s = new StringBuilder();
-		for (long l : bitLines) {
-			s.append(Long.toBinaryString(l)).append("\n");
+		for (Brick b : bitLines) {
+			s.append(Long.toBinaryString(b.bits)).append("\n");
 		}
 		return s.toString();
 	}
@@ -75,24 +124,27 @@ class Brick {
 class Wall extends Brick {
 	class Line {
 		long bits;
+		boolean hasSymmetric = false;
 		int idx;
 		private Line last;
 		Line mainChild;
 		private Map<Long, Line> mapChild = new HashMap<>(1000);
 		Line next;
 		private Line nextChild = null;
-		Line parent;
 
+		Line parent;
 		Line previous;
+
 		long totChildren = 0;
 
 		Line(long bits) {
 			this.bits = bits;
 		}
 
-		Line(long bits, int idx) {
+		Line(long bits, int idx, boolean hasSymmetric) {
 			this.bits = bits;
 			this.idx = idx;
+			this.hasSymmetric = hasSymmetric;
 		}
 
 		public void addChild(Line line) {
@@ -150,9 +202,9 @@ class Wall extends Brick {
 	}
 
 	Line adjacentLines = new Line(-1);
-	private long tableAfter[] = null;
-
 	long mod;
+
+	private long tableAfter[] = null;
 
 	public Wall(int width, int height, long mod) throws Exception {
 		this.width = width;
@@ -180,7 +232,7 @@ class Wall extends Brick {
 			while ((l = adjacentLines.nextChild()) != null) {
 				l.reset();
 				while ((c = l.nextChild()) != null) {
-					tableAfter[c.idx] += tableBefore[l.idx];
+					tableAfter[c.idx] += l.hasSymmetric ? 2 * tableBefore[l.idx] : tableBefore[l.idx];
 					tableAfter[c.idx] %= mod;
 				}
 			}
@@ -221,17 +273,18 @@ class Wall extends Brick {
 
 	private void generateAdjacentLines() {
 		Line line = null;
-		long bit = 0;
-		long adjBit = 0;
+		Brick brick = null;
+		Brick adjBit = null;
 		for (int i = 0; i < bitLines.size(); i++) {
-			bit = bitLines.get(i);
-			line = new Line(bit, i);
+			brick = bitLines.get(i);
+			line = new Line(brick.bits, i, brick.hasSymmetric());
 			adjacentLines.addChild(line);
 
-			for (int j = 0; j < bitLines.size(); j++) {
-				adjBit = bitLines.get(j);
-				if ((bit & adjBit) == 0) {
-					line.addChild(new Line(adjBit, j));
+			for (int j = 0; j < bitLinesSym.size(); j++) {
+				adjBit = bitLinesSym.get(j);
+				if ((brick.bits & adjBit.bits) == 0) {
+					// Nao sei o que fazer nesse ponto
+					line.addChild(new Line(brick.bits, i, brick.hasSymmetric()));
 				}
 			}
 		}
@@ -243,7 +296,7 @@ class Wall extends Brick {
 	}
 
 	private void generateBitLines() {
-		bitLines = new ArrayList<>(width);
+		bitLinesSym = new LinkedList<>();
 		generate(width);
 	}
 
@@ -270,15 +323,15 @@ class Wall extends Brick {
 
 	public void printBitLines() {
 		StringBuilder s = new StringBuilder();
-		for (Long l : bitLines) {
-			s.append(l).append("\n");
+		for (Brick l : bitLines) {
+			s.append(l.bits).append("\n");
 		}
 		System.out.println(s.toString());
 	}
 
 }
 
-public class WallCrackFreeTable {
+public class WallCrackFreeTableSymmetrical {
 
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
@@ -294,6 +347,7 @@ public class WallCrackFreeTable {
 			wall = new Wall(width, heigth, mod);
 			System.out.println(wall.countWalls());
 		} catch (Exception e) {
+			e.printStackTrace();
 			return;
 		}
 	}
