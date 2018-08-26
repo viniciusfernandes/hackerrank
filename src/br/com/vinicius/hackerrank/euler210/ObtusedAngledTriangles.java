@@ -9,8 +9,8 @@ public class ObtusedAngledTriangles {
 		in.close();
 		// String[] s = { "2", "-1", "1", "0" };
 		// String[] s = { "8", "0", "1", "1" };
-		// String[] s = { "17", "3", "7", "2" };
-		String[] s = { "15", "-13", "10", "0" };
+		String[] s = { "17", "3", "7", "2" };
+		// String[] s = { "15", "-13", "10", "0" };
 
 		try {
 			int r = Integer.parseInt(s[0]);
@@ -37,11 +37,12 @@ public class ObtusedAngledTriangles {
 		ok &= Math.abs(n - a / b) <= Math.pow(3, 8);
 		ok &= n * b > a;
 		if (!ok) {
-			throw new IllegalArgumentException();
+			// throw new IllegalArgumentException();
 		}
 		this.r = r;
 		Ax = Ay = a / b;
 		Bx = By = 2 * n - a / b;
+		System.out.println("A=(" + Ax + ", " + Ay + ")" + " B=(" + Bx + ", " + By + ")");
 
 		// analizando o problema no primeiro quadrante pois os outros sao
 		// simetricos
