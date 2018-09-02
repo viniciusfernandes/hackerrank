@@ -1,10 +1,14 @@
 package br.com.vinicius.hackerrank.euler218.tunned;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 class PerfectRightTriangleTunned {
-	private long[] hypotenuses;
-	private long[] totNPerf;
+	private Map<Long, Long[]> totNPerf = new HashMap<>();
+	private long[] orderHyp;
+	private long[] hyp;
 
 	public PerfectRightTriangleTunned(long[] hypotenuses) throws IllegalAccessException {
 		long max = (long) (2 * Math.pow(10, 18));
@@ -13,47 +17,60 @@ class PerfectRightTriangleTunned {
 				throw new IllegalAccessException("Invalid Parameters");
 			}
 		}
-		this.hypotenuses = hypotenuses;
+
+		hyp = hypotenuses;
+
+		orderHyp = Arrays.copyOf(hypotenuses, hypotenuses.length);
+		Arrays.sort(orderHyp);
+
+		for (int i = 0; i < hypotenuses.length; i++) {
+			totNPerf.put(hypotenuses[i], new Long[] { 0L });
+		}
 	}
 
 	public void count() {
-		totNPerf = new long[hypotenuses.length];
+		long h = 0, b = 0, a = 0, c = 0, c2 = 0, nextHyp = 0;
 
-		long h = 0, b = 0, a = 0, c = 0, c2;
+		for (int i = 0; i < orderHyp.length; i++) {
+			c = nextHyp;
+			nextHyp = orderHyp[i];
 
-		for (int i = 0; i < hypotenuses.length; i++) {
-			c = hypotenuses[i];
-			while (c > 0) {
+			while (++c <= nextHyp) {
+
 				if (!isHypotenusePerfectSquare(c)) {
-					c--;
 					continue;
+				} else {
+					System.out.println("Quadr Perf: " + c);
 				}
-
 				c2 = c * c;
 				a = c - 1;
 				b = 1;
 				while (a >= 1 && (h = a * a + b * b) <= c2) {
-					if (h == c) {
+					if (h == c2) {
 						if (!isPrimitiveRightTriangle(a, b, c)) {
-							continue;
+							break;
+						} else {
+							System.out.println("Prime: " + a + " " + b + " " + c);
 						}
 
 						// contando os perfeitos que nao sao super perfeitos
 						if (!isPerfectArea(a, b)) {
-							totNPerf[i]++;
+							totNPerf.get(h)[0]++;
+						} else {
+							System.out.println("Sup Perf: " + a + " " + b + " " + c);
 						}
+						break;
 					}
 					a--;
 					b++;
 				}
-				c--;
 			}
 		}
 	}
 
 	public void print() {
-		for (int i = 0; i < totNPerf.length; i++) {
-			System.out.println(totNPerf[i]);
+		for (int i = 0; i < hyp.length; i++) {
+			System.out.println(totNPerf.get(hyp[i])[0]);
 		}
 	}
 
