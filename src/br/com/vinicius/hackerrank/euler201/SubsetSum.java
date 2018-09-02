@@ -3,31 +3,60 @@ package br.com.vinicius.hackerrank.euler201;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public class SubsetSum {
+class SubsetSum {
 	public static void main(String[] args) {
-		// System.out.println(new SubsetSum(new int[] { 1, 3, 6, 8, 10, 11 },
-		// 3).count());
-		System.out.println(new SubsetSum(new int[] { 1, 2, 3, 4 }, 3).count());
+		Scanner in = new Scanner(System.in);
+		String[] line = in.nextLine().split("\\s+");
+		int n = 0, m = 0;
+		try {
+			n = Integer.parseInt(line[0]);
+			m = Integer.parseInt(line[1]);
+		} catch (Exception e) {
+			in.close();
+			return;
+		}
+		if (n < 1 || n > 100) {
+			in.close();
+			return;
+		}
+		int[] numbers = new int[n];
+
+		line = in.nextLine().split("\\s+");
+		in.close();
+
+		if (line.length != n) {
+			return;
+		}
+		for (int i = 0; i < line.length; i++) {
+			try {
+				numbers[i] = Integer.parseInt(line[i]);
+			} catch (Exception e) {
+				return;
+			}
+		}
+		try {
+			System.out.println(new SubsetSum(numbers, m).count());
+		} catch (Exception e) {
+			return;
+		}
+
 	}
 
 	int m = 0;
 
 	Map<Integer, Boolean> map = new HashMap<>(1000);
 	private int[] numbers = null;
-	private int maxInit = 0;
-
 	private Boolean ok = false;
-
 	private int parcSum = 0;
-
 	private Integer sum = 0;
 
-	public SubsetSum(int[] numbers, int m) {
+	public SubsetSum(int[] numbers, int m) throws Exception {
 		if (numbers.length < 1 || numbers.length > 100 || m < 1 || m > numbers.length) {
-			throw new IllegalArgumentException();
+			throw new Exception();
 		}
 		for (int i : numbers) {
 			if (i < 1 || i > 100) {
@@ -37,11 +66,10 @@ public class SubsetSum {
 		Arrays.sort(numbers);
 		this.numbers = numbers;
 		this.m = m;
-		maxInit = numbers.length - m;
 	}
 
 	public int count() {
-		count(new int[m], 0, 0, 0);
+		count(new int[m - 1], 0, 0, 0);
 
 		int totSum = 0;
 		Set<Entry<Integer, Boolean>> entry = map.entrySet();
@@ -54,41 +82,51 @@ public class SubsetSum {
 		return totSum;
 	}
 
+	// private StringBuilder s = null;
+
 	public void count(int[] subset, int init, int idx, int shift) {
+		// limitacao do cursor inicial
 		if (init + m > numbers.length) {
 			return;
 		}
-		if (idx < init + m - 1) {
-			if (idx <= init) {
-				subset[idx] = numbers[init + idx];
+		// s = new StringBuilder();
+
+		// limitacao do indice que parte do valor inicial ate o limite do
+		// subset.
+		// s.append("{");
+		while (idx < subset.length) {
+			if (idx == 0) {
+				subset[idx] = numbers[init];
 			} else {
 				subset[idx] = numbers[init + idx + shift];
 			}
-			count(subset, init, idx + 1, shift);
-		} else {
-			sum = 0;
-			ok = false;
-			parcSum = 0;
-			for (int i = 0; i < subset.length - 1; i++) {
-				parcSum += subset[i];
-			}
-
-			for (int i = init + idx + shift; i < numbers.length; i++) {
-				sum = parcSum + numbers[i];
-				if ((ok = map.get(sum)) == null) {
-					map.put(sum, Boolean.FALSE);
-				} else if (ok.equals(Boolean.FALSE)) {
-					map.put(sum, Boolean.TRUE);
-				}
-			}
-			if (init + (++shift) + m - 1 < numbers.length) {
-				count(subset, init, 0, shift);
-			} else if ((++init) + m - 1 < numbers.length) {
-				count(subset, init, 0, 0);
-			} else {
-				return;
-			}
-
+			// s.append(subset[idx]).append(", ");
+			idx++;
 		}
+
+		sum = 0;
+		ok = false;
+		parcSum = 0;
+		for (int i = 0; i < subset.length; i++) {
+			parcSum += subset[i];
+		}
+
+		for (int i = init + idx + shift; i < numbers.length; i++) {
+			sum = parcSum + numbers[i];
+			// System.out.println(s.toString() + numbers[i] + "}=" + sum);
+			if ((ok = map.get(sum)) == null) {
+				map.put(sum, Boolean.FALSE);
+			} else if (ok.equals(Boolean.FALSE)) {
+				map.put(sum, Boolean.TRUE);
+			}
+		}
+		if (init + (shift + 1) + m - 1 < numbers.length) {
+			count(subset, init, 0, shift + 1);
+		} else if ((++init) + m - 1 < numbers.length) {
+			count(subset, init, 0, 0);
+		} else {
+			return;
+		}
+
 	}
 }
