@@ -69,9 +69,15 @@ class SubsetSum {
 	}
 
 	public int count() {
+		int totSum = 0;
+		if (m == 1 || m == numbers.length) {
+			for (int i = 0; i < numbers.length; i++) {
+				totSum += numbers[i];
+			}
+			return totSum;
+		}
 		count(new int[m - 1], 0, 0, 0);
 
-		int totSum = 0;
 		Set<Entry<Integer, Boolean>> entry = map.entrySet();
 		for (Entry<Integer, Boolean> e : entry) {
 			if (!e.getValue()) {
@@ -82,25 +88,25 @@ class SubsetSum {
 		return totSum;
 	}
 
-	// private StringBuilder s = null;
+	//private StringBuilder s = null;
 
 	public void count(int[] subset, int init, int idx, int shift) {
 		// limitacao do cursor inicial
 		if (init + m > numbers.length) {
 			return;
 		}
-		// s = new StringBuilder();
+	//	s = new StringBuilder();
 
 		// limitacao do indice que parte do valor inicial ate o limite do
 		// subset.
-		// s.append("{");
+		//s.append("{");
 		while (idx < subset.length) {
 			if (idx == 0) {
 				subset[idx] = numbers[init];
 			} else {
 				subset[idx] = numbers[init + idx + shift];
 			}
-			// s.append(subset[idx]).append(", ");
+			//s.append(subset[idx]).append(", ");
 			idx++;
 		}
 
@@ -113,14 +119,14 @@ class SubsetSum {
 
 		for (int i = init + idx + shift; i < numbers.length; i++) {
 			sum = parcSum + numbers[i];
-			// System.out.println(s.toString() + numbers[i] + "}=" + sum);
+			//System.out.println(s.toString() + numbers[i] + "}=" + sum);
 			if ((ok = map.get(sum)) == null) {
 				map.put(sum, Boolean.FALSE);
 			} else if (ok.equals(Boolean.FALSE)) {
 				map.put(sum, Boolean.TRUE);
 			}
 		}
-		if (init + (shift + 1) + m - 1 < numbers.length) {
+		if (subset.length > 1 && init + (shift + 1) + m - 1 < numbers.length) {
 			count(subset, init, 0, shift + 1);
 		} else if ((++init) + m - 1 < numbers.length) {
 			count(subset, init, 0, 0);
