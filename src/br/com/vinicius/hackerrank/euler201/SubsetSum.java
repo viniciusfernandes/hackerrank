@@ -41,6 +41,7 @@ class SubsetSum {
 		try {
 			System.out.println(new SubsetSum(numbers, m).count());
 		} catch (Exception e) {
+			e.printStackTrace();
 			return;
 		}
 
@@ -52,7 +53,7 @@ class SubsetSum {
 	private int[] numbers = null;
 	private Boolean ok = false;
 	private int parcSum = 0;
-	private Integer sum = 0;
+	private int sum = 0;
 
 	public SubsetSum(int[] numbers, int m) throws Exception {
 		if (numbers.length < 1 || numbers.length > 100 || m < 1 || m > numbers.length) {
@@ -76,7 +77,18 @@ class SubsetSum {
 			}
 			return totSum;
 		}
-		count(new int[m - 1], 0, 0, 0);
+
+		int[] idxTable = new int[m - 1];
+		for (int i = 0; i < idxTable.length; i++) {
+			idxTable[i] = i;
+		}
+
+		int[] idxMax = new int[m - 1];
+		for (int i = 0; i < idxMax.length; i++) {
+			idxMax[i] = numbers.length - m + 1 + i;
+		}
+
+		count(new int[m - 1], idxTable, idxMax, idxTable.length - 1);
 
 		Set<Entry<Integer, Boolean>> entry = map.entrySet();
 		for (Entry<Integer, Boolean> e : entry) {
@@ -88,26 +100,47 @@ class SubsetSum {
 		return totSum;
 	}
 
-	//private StringBuilder s = null;
+	private StringBuilder s = null;
 
-	public void count(int[] subset, int init, int idx, int shift) {
-		// limitacao do cursor inicial
-		if (init + m > numbers.length) {
+	private void count(int[] subset, int[] idxTable, int[] idxMax, int col) {
+		if (idxTable[0] > idxMax[0]) {
 			return;
 		}
-	//	s = new StringBuilder();
 
-		// limitacao do indice que parte do valor inicial ate o limite do
-		// subset.
-		//s.append("{");
-		while (idx < subset.length) {
-			if (idx == 0) {
-				subset[idx] = numbers[init];
-			} else {
-				subset[idx] = numbers[init + idx + shift];
+		if (col + 1 < idxTable.length && idxTable[col] == idxTable[col + 1]) {
+
+			if (idxTable[col + 1] >= idxMax[col + 1]) {
+				for (int i = col; i < idxTable.length; i++) {
+					idxTable[i] = idxMax[i];
+				}
+			} else if (idxTable[col] <= idxMax[col]) {
+				for (int i = col + 1; i < idxTable.length; i++) {
+					idxTable[i]++;
+					if (idxTable[i] > idxMax[i]) {
+						idxTable[i] = idxMax[i];
+					}
+				}
 			}
-			//s.append(subset[idx]).append(", ");
-			idx++;
+		}
+
+		if (col > 0 && idxTable[col] >= idxMax[col]) {
+			int idx = idxTable[col - 1];
+			for (int i = col - 1; i < idxTable.length; i++) {
+				idxTable[i] = ++idx;
+			}
+			if (col + 1 < idxTable.length && idxTable[col + 1] >= idxMax[col + 1]) {
+				col--;
+			} else if (col + 1 < idxTable.length && idxTable[col + 1] < idxMax[col + 1]) {
+
+				col++;
+			}
+		}
+
+		s = new StringBuilder();
+		s.append("{");
+		for (int i = 0; i < idxTable.length; i++) {
+			subset[i] = numbers[idxTable[i]];
+			s.append(subset[i]).append(",");
 		}
 
 		sum = 0;
@@ -116,23 +149,17 @@ class SubsetSum {
 		for (int i = 0; i < subset.length; i++) {
 			parcSum += subset[i];
 		}
-
-		for (int i = init + idx + shift; i < numbers.length; i++) {
+		for (int i = idxTable[idxTable.length - 1] + 1; i < numbers.length; i++) {
 			sum = parcSum + numbers[i];
-			//System.out.println(s.toString() + numbers[i] + "}=" + sum);
+			System.out.println(s.toString() + numbers[i] + "}=" + sum);
 			if ((ok = map.get(sum)) == null) {
 				map.put(sum, Boolean.FALSE);
 			} else if (ok.equals(Boolean.FALSE)) {
 				map.put(sum, Boolean.TRUE);
 			}
 		}
-		if (subset.length > 1 && init + (shift + 1) + m - 1 < numbers.length) {
-			count(subset, init, 0, shift + 1);
-		} else if ((++init) + m - 1 < numbers.length) {
-			count(subset, init, 0, 0);
-		} else {
-			return;
-		}
+		idxTable[col]++;
 
+		count(subset, idxTable, idxMax, col);
 	}
 }
