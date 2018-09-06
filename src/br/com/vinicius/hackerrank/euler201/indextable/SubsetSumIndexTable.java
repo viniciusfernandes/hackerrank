@@ -1,4 +1,4 @@
-package br.com.vinicius.hackerrank.euler201;
+package br.com.vinicius.hackerrank.euler201.indextable;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,7 +7,7 @@ import java.util.Scanner;
 import java.util.Map.Entry;
 import java.util.Set;
 
-class SubsetSum {
+class SubsetSumIndexTable {
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
 		String[] line = in.nextLine().split("\\s+");
@@ -39,8 +39,9 @@ class SubsetSum {
 			}
 		}
 		try {
-			System.out.println(new SubsetSum(numbers, m).count());
+			System.out.println(new SubsetSumIndexTable(numbers, m).count());
 		} catch (Exception e) {
+			e.printStackTrace();
 			return;
 		}
 
@@ -52,9 +53,9 @@ class SubsetSum {
 	private int[] numbers = null;
 	private Boolean ok = false;
 	private int parcSum = 0;
-	private Integer sum = 0;
+	private int sum = 0;
 
-	public SubsetSum(int[] numbers, int m) throws Exception {
+	public SubsetSumIndexTable(int[] numbers, int m) throws Exception {
 		if (numbers.length < 1 || numbers.length > 100 || m < 1 || m > numbers.length) {
 			throw new Exception();
 		}
@@ -76,7 +77,18 @@ class SubsetSum {
 			}
 			return totSum;
 		}
-		count(new int[m - 1], 0, 0, 0);
+
+		int[] idxTable = new int[m - 1];
+		for (int i = 0; i < idxTable.length; i++) {
+			idxTable[i] = i;
+		}
+
+		int[] idxMax = new int[m - 1];
+		for (int i = 0; i < idxMax.length; i++) {
+			idxMax[i] = numbers.length - m + i;
+		}
+
+		count(new int[m - 1], idxTable, idxMax, idxTable.length - 1);
 
 		Set<Entry<Integer, Boolean>> entry = map.entrySet();
 		for (Entry<Integer, Boolean> e : entry) {
@@ -90,24 +102,31 @@ class SubsetSum {
 
 	private StringBuilder s = null;
 
-	public void count(int[] subset, int init, int idx, int shift) {
-		// limitacao do cursor inicial
-		if (init + m > numbers.length) {
+	private void count(int[] subset, int[] idxTable, int[] idxMax, int col) {
+		if (idxTable[0] >= idxMax[0]) {
 			return;
 		}
-		s = new StringBuilder();
 
-		// limitacao do indice que parte do valor inicial ate o limite do
-		// subset.
-		s.append("{");
-		while (idx < subset.length) {
-			if (idx == 0) {
-				subset[idx] = numbers[init];
+		if (col > 0 && idxTable[col] >= idxMax[col]) {
+			if (col + 1 < idxTable.length && idxTable[col + 1] < idxMax[col + 1]) {
+				idxTable[col + 1]++;
+				idxTable[col]--;
+
+				col++;
 			} else {
-				subset[idx] = numbers[init + idx + shift];
+				int idx = idxTable[col - 1];
+				for (int i = col - 1; i < idxTable.length; i++) {
+					idxTable[i] = ++idx;
+				}
+				col--;
 			}
-			s.append(subset[idx]).append(", ");
-			idx++;
+		}
+
+		s = new StringBuilder();
+		s.append("{");
+		for (int i = 0; i < idxTable.length; i++) {
+			subset[i] = numbers[idxTable[i]];
+			s.append(subset[i]).append(",");
 		}
 
 		sum = 0;
@@ -116,8 +135,7 @@ class SubsetSum {
 		for (int i = 0; i < subset.length; i++) {
 			parcSum += subset[i];
 		}
-
-		for (int i = init + idx + shift; i < numbers.length; i++) {
+		for (int i = idxTable[idxTable.length - 1] + 1; i < numbers.length; i++) {
 			sum = parcSum + numbers[i];
 			System.out.println(s.toString() + numbers[i] + "}=" + sum);
 			if ((ok = map.get(sum)) == null) {
@@ -126,13 +144,7 @@ class SubsetSum {
 				map.put(sum, Boolean.TRUE);
 			}
 		}
-		if (subset.length > 1 && init + (shift + 1) + m - 1 < numbers.length) {
-			count(subset, init, 0, shift + 1);
-		} else if ((++init) + m - 1 < numbers.length) {
-			count(subset, init, 0, 0);
-		} else {
-			return;
-		}
-
+		idxTable[col]++;
+		count(subset, idxTable, idxMax, col);
 	}
 }
