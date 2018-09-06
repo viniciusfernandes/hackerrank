@@ -39,7 +39,7 @@ public class SubsetSumSimple {
 			}
 		}
 		try {
-			System.out.println(new SubsetSumIndexTable(numbers, m).count());
+			System.out.println(new SubsetSumSimple(numbers, m).count());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return;
@@ -88,6 +88,7 @@ public class SubsetSumSimple {
 		for (int j = 0; j < idxTable.length; j++) {
 			subset[j] = numbers[idxTable[j]];
 		}
+		System.out.println(Arrays.toString(subset));
 		sum(subset);
 
 		if (idxTable[col] < idxMax[col]) {
@@ -97,8 +98,7 @@ public class SubsetSumSimple {
 					idxTable[i] = idxMax[i];
 				}
 			}
-		} else if (idxTable[col] == idxMax[col]) {
-			col--;
+		} else if (idxTable[col] == idxMax[col] && --col >= 0) {
 			idxTable[col]++;
 			int idx = idxTable[col];
 			for (int i = col + 1; i < idxTable.length; i++) {
