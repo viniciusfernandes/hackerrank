@@ -107,13 +107,24 @@ class SubsetSumIndexTable {
 			return;
 		}
 
+		if (col > 0 && col == idxTable.length - 1 && idxTable[col] > idxMax[col]) {
+			idxTable[col - 1]++;
+			if (idxTable[col - 1] >= idxTable[col]) {
+				idxTable[col] = idxTable[col - 1] + 1;
+			}
+
+			if (idxTable[col] > idxMax[col]) {
+				idxTable[col] = idxMax[col];
+				col--;
+			}
+		}
 		if (col > 0 && idxTable[col] >= idxMax[col]) {
 			if (col + 1 < idxTable.length && idxTable[col + 1] < idxMax[col + 1]) {
 				idxTable[col + 1]++;
 				idxTable[col]--;
-
 				col++;
-			} else {
+
+			} else if (col + 1 < idxTable.length) {
 				int idx = idxTable[col - 1];
 				for (int i = col - 1; i < idxTable.length; i++) {
 					idxTable[i] = ++idx;
