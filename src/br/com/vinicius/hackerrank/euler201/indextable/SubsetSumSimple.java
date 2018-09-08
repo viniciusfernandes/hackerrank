@@ -90,14 +90,23 @@ public class SubsetSumSimple {
 		}
 		System.out.println(Arrays.toString(subset));
 		sum(subset);
-
 		if (idxTable[col] < idxMax[col]) {
-			idxTable[col]++;
-			for (int i = col + 1; i < idxTable.length; i++) {
-				if (++idxTable[i] > idxMax[i]) {
-					idxTable[i] = idxMax[i];
+			if (col + 1 < idxTable.length && idxTable[col + 1] < idxMax[col + 1]) {
+				idxTable[col + 1]++;
+			} else {
+				idxTable[col]++;
+				if (col + 1 < idxTable.length && idxTable[col] < idxMax[col]) {
+					idxTable[col + 1] = idxTable[col] + 1;
+					if (idxTable[col + 1] > idxMax[col + 1]) {
+						idxTable[col + 1] = idxMax[col + 1];
+					}
 				}
 			}
+
+			/*
+			 * for (i = col + 1; i < idxTable.length; i++) { if (++idxTable[i] >
+			 * idxMax[i]) { idxTable[i] = idxMax[i]; } }
+			 */
 		} else if (idxTable[col] == idxMax[col] && --col >= 0) {
 			idxTable[col]++;
 			int idx = idxTable[col];

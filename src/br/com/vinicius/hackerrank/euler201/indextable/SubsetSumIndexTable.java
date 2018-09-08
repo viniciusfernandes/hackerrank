@@ -103,19 +103,12 @@ class SubsetSumIndexTable {
 	private StringBuilder s = null;
 
 	private void count(int[] subset, int[] idxTable, int[] idxMax, int col) {
-		if (idxTable[0] >= idxMax[0]) {
-			return;
-		}
 
 		if (col > 0 && col == idxTable.length - 1 && idxTable[col] > idxMax[col]) {
-			idxTable[col - 1]++;
-			if (idxTable[col - 1] >= idxTable[col]) {
-				idxTable[col] = idxTable[col - 1] + 1;
-			}
-
-			if (idxTable[col] > idxMax[col]) {
-				idxTable[col] = idxMax[col];
-				col--;
+			col--;
+			int idx = ++idxTable[col];
+			for (int i = col + 1; i < idxTable.length; i++) {
+				idxTable[i] = ++idx;
 			}
 		}
 		if (col > 0 && idxTable[col] >= idxMax[col]) {
@@ -155,7 +148,11 @@ class SubsetSumIndexTable {
 				map.put(sum, Boolean.TRUE);
 			}
 		}
+
 		idxTable[col]++;
+		if (idxTable[0] >= idxMax[0]) {
+			return;
+		}
 		count(subset, idxTable, idxMax, col);
 	}
 }
