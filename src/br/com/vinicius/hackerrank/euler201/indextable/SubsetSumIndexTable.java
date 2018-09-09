@@ -52,7 +52,7 @@ class SubsetSumIndexTable {
 	private int[] numbers = null;
 	private Boolean ok = false;
 	private int parcSum = 0;
-	//private StringBuilder s = null;
+	// private StringBuilder s = null;
 
 	private int sum = 0;
 
@@ -84,17 +84,12 @@ class SubsetSumIndexTable {
 			idxTable[i] = i;
 		}
 
-		int[] idxInit = new int[m - 1];
-		for (int i = 0; i < idxTable.length; i++) {
-			idxInit[i] = i;
-		}
-
 		int[] idxMax = new int[m - 1];
 		for (int i = 0; i < idxMax.length; i++) {
 			idxMax[i] = numbers.length - m + i;
 		}
 
-		count(new int[m - 1], idxTable, idxInit, idxMax, idxTable.length - 1);
+		count(new int[m - 1], idxTable, idxMax, idxTable.length - 1);
 
 		Set<Entry<Integer, Boolean>> entry = map.entrySet();
 		for (Entry<Integer, Boolean> e : entry) {
@@ -106,13 +101,13 @@ class SubsetSumIndexTable {
 		return totSum;
 	}
 
-	private void count(int[] subset, int[] idxTable, int[] idxInit, int[] idxMax, int col) {
+	private void count(int[] subset, int[] idxTable, int[] idxMax, int col) {
 
-		//s = new StringBuilder();
-		//s.append("{");
+		// s = new StringBuilder();
+		// s.append("{");
 		for (int i = 0; i < idxTable.length; i++) {
 			subset[i] = numbers[idxTable[i]];
-			//s.append(subset[i]).append(",");
+			// s.append(subset[i]).append(",");
 		}
 
 		sum = 0;
@@ -123,7 +118,7 @@ class SubsetSumIndexTable {
 		}
 		for (int i = idxTable[idxTable.length - 1] + 1; i < numbers.length; i++) {
 			sum = parcSum + numbers[i];
-			//System.out.println(s.toString() + numbers[i] + "}=" + sum);
+			// System.out.println(s.toString() + numbers[i] + "}=" + sum);
 			if ((ok = map.get(sum)) == null) {
 				map.put(sum, Boolean.FALSE);
 			} else if (ok.equals(Boolean.FALSE)) {
@@ -147,11 +142,11 @@ class SubsetSumIndexTable {
 			idxTable[col]--;
 			col++;
 			idxTable[col]++;
-			count(subset, idxTable, idxInit, idxMax, col);
+			count(subset, idxTable, idxMax, col);
 		}
 		if (idxTable[0] > idxMax[0]) {
 			return;
 		}
-		count(subset, idxTable, idxInit, idxMax, col);
+		count(subset, idxTable, idxMax, col);
 	}
 }
