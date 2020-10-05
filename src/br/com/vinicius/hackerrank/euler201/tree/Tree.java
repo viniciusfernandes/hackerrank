@@ -85,21 +85,24 @@ public class Tree {
 	}
 
 	private int cost = -1;
-	private Node subnode = null;
-	private int level = -1;
+	private int lastLevelCost = -1;
+	Node subnode = null;
 
 	private void addSubnode(Node node, Node subtree, Node root) {
 		if (node.level >= stopLevel) {
 			final int partialCost = root.value + node.cost;
+
 			for (int i = node.index + 1; i < numbers.length; i++) {
 				cost = partialCost + numbers[i];
+				lastLevelCost = node.value + numbers[i];
+
 				addSumSubsets(cost);
-				subtree.addLastLevelCost(cost);
+				subtree.addLastLevelCost(lastLevelCost);
 			}
 		}
-
 		else {
-			level = node.level + 1;
+			final int level = node.level + 1;
+
 			for (int i = node.index + 1; i <= stopSubnodeIndex; i++) {
 				if (level == 2) {
 					root = node;
@@ -121,11 +124,16 @@ public class Tree {
 
 	private Node subtree = null;
 
-	public void addSubnodesCached(int parentIndex, int parentCost) {
+	private void addSubnodesCached(int parentIndex, int parentValue) {
 		for (int i = parentIndex; i <= stopParentIndex; i++) {
-			subtree = subtreesCache.get(numbers[i]);
+			subtree = subtreesCache.get(numbers[i + 1]);
+			if (subtree == null) {
+				throw new IllegalStateException(
+						"Nao existe a subtree para o parent com o index=" + parentValue + " e valor=" + parentValue);
+			}
 			for (final int sum : subtree.lastLevelSums) {
-				addSumSubsets(parentCost + sum);
+				cost = parentValue + sum;
+				addSumSubsets(parentValue + sum);
 			}
 		}
 	}
@@ -149,7 +157,7 @@ public class Tree {
 		// 156
 
 		// 4 3
-		// 1 2 3 4
+		// 1 2 3 4 5
 		final Scanner in = new Scanner(System.in);
 		String[] line = in.nextLine().split("\\s+");
 		int n = 0;
@@ -203,8 +211,8 @@ class Node {
 	public int index;
 	public int level;
 	public Node parent;
-	public List<Node> subnodes = new ArrayList<>(100);
-	public List<Integer> lastLevelSums = new ArrayList<>(100);
+	public List<Node> subnodes = new ArrayList<>();
+	public List<Integer> lastLevelSums = new ArrayList<>();
 
 	public Node(int value, int cost, int index, int level, Node parent) {
 		this.value = value;
