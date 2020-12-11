@@ -12,18 +12,15 @@ public class Tree {
 	final int[] numbers;
 	final int setSize;
 	final int stopLevel;
-	final int stopParentIndex;
-	final int stopSubnodeIndex;
-	Node root;
+	final int stopIndex;
 	final Map<Integer, Integer> sumSubsets = new HashMap<>(1000);
-	final Map<Integer, Node> subtreesCache = new HashMap<>(100);
+	final Map<Integer, List<Integer>> cachedSums = new HashMap<>(100);
 
 	public Tree(int[] numbers, int setSize) {
 		this.numbers = numbers;
 		this.setSize = setSize;
 		stopLevel = setSize - 1;
-		stopParentIndex = numbers.length - setSize;
-		stopSubnodeIndex = stopParentIndex + 1;
+		stopIndex = numbers.length - setSize + 1;
 	}
 
 	public int sumSubsets() {
@@ -54,7 +51,7 @@ public class Tree {
 	}
 
 	public void sumSubsetsSize2() {
-		for (int i = 0; i <= stopParentIndex; i++) {
+		for (int i = 0; i <= stopIndex; i++) {
 			for (int j = i + 1; j < numbers.length; j++) {
 				cost = numbers[i] + numbers[j];
 				addSumSubsets(cost);
@@ -64,11 +61,9 @@ public class Tree {
 	}
 
 	public void sumSubsetsSizeHigher() {
-		Node parent = new Node(numbers[0], numbers[0], 0, 1, null);
-		addSubnode(parent, null, parent);
+		addSubnode(numbers[0], numbers[0], 0, 0, numbers[0], -1);
 
-		for (int i = 1; i <= stopParentIndex; i++) {
-			parent = new Node(numbers[i], numbers[i], i, 1, null);
+		for (int i = 1; i <= stopIndex; i++) {
 			addSubnodesCached(i, numbers[i]);
 		}
 
@@ -85,53 +80,54 @@ public class Tree {
 	}
 
 	private int cost = -1;
-	private int lastLevelCost = -1;
-	Node subnode = null;
 
-	private void addSubnode(Node node, Node subtree, Node root) {
-		if (node.level >= stopLevel) {
-			final int partialCost = root.value + node.cost;
+	private void addSubnode(int nodeValue, int nodeCost, int nodeIndex, int nodeLevel, int rootValue,
+			int firstChildValue) {
+		if (nodeIndex >= stopIndex) {
+			return;
+		}
 
-			for (int i = node.index + 1; i < numbers.length; i++) {
+		if (nodeLevel >= stopLevel) {
+			final int partialCost = rootValue + nodeCost;
+			final List<Integer> costs = new ArrayList<>(50);
+			int cachedCost = -1;
+			for (int i = nodeIndex + 1; i < numbers.length; i++) {
 				cost = partialCost + numbers[i];
-				lastLevelCost = node.value + numbers[i];
+				cachedCost = nodeValue + numbers[i];
 
 				addSumSubsets(cost);
-				subtree.addLastLevelCost(lastLevelCost);
+				costs.add(cachedCost);
 			}
+			cachedSums.put(nodeIndex, costs);
+
 		}
 		else {
-			final int level = node.level + 1;
+			final int level = nodeLevel + 1;
+			for (int idx = nodeIndex + 1; idx <= stopIndex; idx++) {
+				System.out.println("parent=" + nodeIndex + " child=" + idx + " level=" + level + " valor=" + numbers[idx]);
 
-			for (int i = node.index + 1; i <= stopSubnodeIndex; i++) {
-				if (level == 2) {
-					root = node;
-					cost = numbers[i];
-					subnode = new Node(numbers[i], cost, i, 2, root);
-					subtree = subnode;
-					subtreesCache.put(numbers[i], subtree);
-
+				if (level == 1) {
+					rootValue = nodeValue;
+					addSubnode(numbers[idx], numbers[idx], idx, level, rootValue, numbers[idx]);
 				}
 				else {
-					cost = node.cost + numbers[i];
-					subnode = new Node(numbers[i], cost, i, level, node);
+					cost = nodeCost + numbers[idx];
+					addSubnode(numbers[idx], cost, idx, level, rootValue, nodeValue);
 				}
-				node.subnodes.add(subnode);
-				addSubnode(subnode, subtree, root);
 			}
 		}
 	}
 
-	private Node subtree = null;
+	private List<Integer> sums = null;
 
 	private void addSubnodesCached(int parentIndex, int parentValue) {
-		for (int i = parentIndex; i <= stopParentIndex; i++) {
-			subtree = subtreesCache.get(numbers[i + 1]);
-			if (subtree == null) {
+		for (int i = parentIndex; i <= stopIndex; i++) {
+			sums = cachedSums.get(i + 1);
+			if (sums == null) {
 				throw new IllegalStateException(
-						"Nao existe a subtree para o parent com o index=" + parentValue + " e valor=" + parentValue);
+						"Nao existe a somas parcial para o parent =" + parentValue + " e valor=" + parentValue);
 			}
-			for (final int sum : subtree.lastLevelSums) {
+			for (final int sum : sums) {
 				cost = parentValue + sum;
 				addSumSubsets(parentValue + sum);
 			}
@@ -139,25 +135,6 @@ public class Tree {
 	}
 
 	public static void main(String[] args) {
-		// EXEMPLO
-		// 20 3
-		// 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-
-		// 6 3
-		// 1 2 3 4 5 6
-
-		// 100 50
-		// 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35
-		// 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67
-		// 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99
-		// 100
-
-		// 6 3
-		// 1 3 6 8 10 11
-		// 156
-
-		// 4 3
-		// 1 2 3 4 5
 		final Scanner in = new Scanner(System.in);
 		String[] line = in.nextLine().split("\\s+");
 		int n = 0;
@@ -203,31 +180,4 @@ public class Tree {
 		}
 	}
 
-}
-
-class Node {
-	public int value;
-	public int cost;
-	public int index;
-	public int level;
-	public Node parent;
-	public List<Node> subnodes = new ArrayList<>();
-	public List<Integer> lastLevelSums = new ArrayList<>();
-
-	public Node(int value, int cost, int index, int level, Node parent) {
-		this.value = value;
-		this.cost = cost;
-		this.index = index;
-		this.level = level;
-		this.parent = parent;
-	}
-
-	@Override
-	public String toString() {
-		return "{level=" + level + ", value=" + value + ", cost=" + cost + ", index=" + index + "}";
-	}
-
-	public void addLastLevelCost(Integer cost) {
-		lastLevelSums.add(cost);
-	}
 }
