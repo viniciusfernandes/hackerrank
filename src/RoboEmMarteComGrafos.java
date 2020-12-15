@@ -77,8 +77,7 @@ public class RoboEmMarteComGrafos {
 
 		final Scanner in = new Scanner(System.in);
 
-		// points = in.nextLine().split(" ");
-		points = "2 5 1 0".split(" ");
+		points = in.nextLine().split(" ");
 		x1 = Integer.parseInt(points[0]);
 		y1 = Integer.parseInt(points[1]);
 		x2 = Integer.parseInt(points[2]);
@@ -92,7 +91,7 @@ public class RoboEmMarteComGrafos {
 		final Point from = new Point(x1, y1);
 		final Point to = new Point(x2, y2);
 
-		final int n = 2;// in.nextInt();
+		final int n = in.nextInt();
 		if (n < 0 || n > 1000) {
 			in.close();
 			return;
@@ -109,16 +108,17 @@ public class RoboEmMarteComGrafos {
 	}
 
 	private static boolean buildGraph(int totalAreas, Scanner in, Point from, Point to) {
-		final String[] lines = new String[] {
-				"1 3 2 4", "3 1 4 3"
-		};
+
 		graph = new Graph(totalAreas, from, to);
 
+		if (totalAreas <= 0) {
+			return true;
+		}
+
 		Area newArea = null;
-		// in.nextLine();
+		in.nextLine();
 		for (int i = 1; i <= totalAreas; i++) {
-			// points = in.nextLine().split(" ");
-			points = lines[i - 1].split(" ");
+			points = in.nextLine().split(" ");
 
 			x1 = Integer.parseInt(points[0]);
 			y1 = Integer.parseInt(points[1]);
@@ -154,11 +154,12 @@ class Graph {
 
 	private final int[][] costMatrix;
 	private final boolean[][] linkVisited;
+	private final int size;
 
 	private int countNodes;
 
 	public Graph(int totalAreas, Point from, Point to) {
-		final int size = totalAreas + 2;
+		size = totalAreas + 2;
 
 		costMatrix = new int[size][size];
 		linkVisited = new boolean[size][size];
@@ -192,56 +193,42 @@ class Graph {
 	}
 
 	public int searchLowerCost() {
-
-		if (costMatrix.length == 1) {
-			return costMatrix[0][0];
-		}
 		int totCost = 0;
+
+		int row = 0;
+		int visitedRow = 0;
+		int visitedCol = 0;
+		int count = size;
 		int lowerCost = -1;
 
-		int count = costMatrix.length - 1;
-		int row = 0;
-		final int lastCol = costMatrix.length - 1;
-		int nextCol = 0;
-		int vistedRow = 0;
-		int vistedCol = 0;
-		while (count >= 0) {
-			for (int col = 1; col < lastCol; col++) {
+		count--;
+		boolean initCost = true;
+		while (count > 0) {
 
-				if (row == col) {
+			for (int col = 0; col < costMatrix.length; col++) {
+
+				if (row == col || isVisited(row, col)) {
 					continue;
 				}
-
-				nextCol = col + 1;
-				if (row == nextCol) {
-					nextCol++;
+				if (initCost) {
+					lowerCost = costMatrix[row][col];
+					initCost = false;
 				}
 
-				if (nextCol > lastCol) {
-					break;
+				if (costMatrix[row][col] < lowerCost) {
+					lowerCost = costMatrix[row][col];
+					visitedRow = row;
+					visitedCol = col;
 				}
-
-				lowerCost = costMatrix[row][col];
-				if (costMatrix[row][nextCol] < lowerCost && !isVisited(row, nextCol)) {
-					lowerCost = costMatrix[row][nextCol];
-					vistedRow = row;
-					vistedCol = nextCol;
-				}
-
 			}
-
-			visiting(vistedRow, vistedCol);
-
-			row = vistedCol;
-			count--;
+			visiting(visitedRow, visitedCol);
 			totCost += lowerCost;
-
-			if (vistedCol == 1) {
-				return totCost;
-			}
+			row = visitedCol;
+			initCost = true;
+			count--;
 		}
 
-		return -1;
+		return totCost;
 	}
 
 	private boolean isVisited(int row, int col) {
