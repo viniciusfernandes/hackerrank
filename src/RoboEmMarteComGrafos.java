@@ -2,6 +2,7 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Stack;
 
 //2 5 1 0
 //2
@@ -13,6 +14,7 @@ import java.util.Scanner;
 //0 0 1 5
 //2 0 5 1
 //3 2 6 4
+
 public class RoboEmMarteComGrafos {
 	private static void teste() {
 		final Point from = new Point(2, 5);
@@ -73,8 +75,6 @@ public class RoboEmMarteComGrafos {
 
 	public static void main(String[] args) {
 
-//		teste();
-
 		final Scanner in = new Scanner(System.in);
 
 		points = in.nextLine().split(" ");
@@ -91,7 +91,7 @@ public class RoboEmMarteComGrafos {
 		final Point from = new Point(x1, y1);
 		final Point to = new Point(x2, y2);
 
-		final int n = in.nextInt();
+		final int n = Integer.parseInt(in.nextLine());
 		if (n < 0 || n > 1000) {
 			in.close();
 			return;
@@ -116,7 +116,6 @@ public class RoboEmMarteComGrafos {
 		}
 
 		Area newArea = null;
-		in.nextLine();
 		for (int i = 1; i <= totalAreas; i++) {
 			points = in.nextLine().split(" ");
 
@@ -153,31 +152,42 @@ class Graph {
 	private int cost = -1;
 
 	private final int[][] costMatrix;
-	private final boolean[][] linkVisited;
 	private final int size;
+	private final int firstNodeIndex;
+	private final int lastNodeIndex;
 
-	private int countNodes;
+	private int countAreas;
+	private int lowerCost;
 
 	public Graph(int totalAreas, Point from, Point to) {
 		size = totalAreas + 2;
+		firstNodeIndex = 0;
+		lastNodeIndex = size - 1;
 
 		costMatrix = new int[size][size];
-		linkVisited = new boolean[size][size];
 
-		nodeFrom = new Node(countNodes++, from);
-		nodeTo = new Node(countNodes++, to);
+		nodeFrom = new Node(firstNodeIndex, from);
+		// SETTING NODE "TO" AS THE LAST NODE IN THE ORDER INDEXES
+		nodeTo = new Node(lastNodeIndex, to);
+
+		// TWO NODES HAVE ADDED IN THE GRAPH
+		countAreas = 1;
 
 		cost = from.distanceOf(to);
 
 		costMatrix[nodeFrom.id][nodeTo.id] = cost;
 		costMatrix[nodeTo.id][nodeFrom.id] = cost;
 
+		lowerCost = cost;
+
 		nodes.add(nodeFrom);
 		nodes.add(nodeTo);
+
+		nodeFrom.linking(nodeTo);
 	}
 
 	public void add(Area a) {
-		node = new Node(countNodes++, a);
+		node = new Node(countAreas++, a);
 		for (final Node n : nodes) {
 			if (n.point != null) {
 				cost = n.point.distanceOf(a);
@@ -188,72 +198,168 @@ class Graph {
 
 			costMatrix[node.id][n.id] = cost;
 			costMatrix[n.id][node.id] = cost;
+
+			node.linking(n);
 		}
 		nodes.add(node);
 	}
 
 	public int searchLowerCost() {
-		int totCost = 0;
+		searchLowerCost(nodeFrom, nodeFrom.nextToVisit(), 0);
+		return lowerCost;
+	}
 
-		int row = 0;
-		int visitedRow = 0;
-		int visitedCol = 0;
-		int count = size;
-		int lowerCost = -1;
+	private final Stack<Node> visitedNodes = new Stack<>();
+	private Node backtrackNode = null;
+	private int backtrackCost = -1;
 
-		count--;
-		boolean initCost = true;
-		while (count > 0) {
+	public void searchLowerCost(Node previous, Node next, int totalCost) {
+		if (previous == null) {
+			return;
+		}
+		if (!visitedNodes.contains(previous)) {
+			visitedNodes.push(previous);
+		}
+		totalCost += costMatrix[previous.id][next.id];
 
-			for (int col = 0; col < costMatrix.length; col++) {
+		if (next == nodeTo) {
 
-				if (row == col || isVisited(row, col)) {
-					continue;
-				}
-				if (initCost) {
-					lowerCost = costMatrix[row][col];
-					initCost = false;
-				}
-
-				if (costMatrix[row][col] < lowerCost) {
-					lowerCost = costMatrix[row][col];
-					visitedRow = row;
-					visitedCol = col;
-				}
+			if (totalCost < lowerCost) {
+				lowerCost = totalCost;
 			}
-			visiting(visitedRow, visitedCol);
-			totCost += lowerCost;
-			row = visitedCol;
-			initCost = true;
-			count--;
+
+			final Node nextToVisit = nextToVisit(previous);
+			if (nextToVisit != null) {
+				totalCost -= costMatrix[previous.id][next.id];
+				next = nextToVisit;
+				searchLowerCost(previous, next, totalCost);
+			}
+			else {
+				backtrack(previous, totalCost);
+				previous = backtrackNode;
+				if (previous == null) {
+					return;
+				}
+				next = previous.nextToVisit();
+				totalCost = backtrackCost;
+				searchLowerCost(previous, next, totalCost);
+			}
+		}
+		else {
+
+			previous = next;
+			next = nextToVisit(next);
+			searchLowerCost(previous, next, totalCost);
 		}
 
-		return totCost;
 	}
 
-	private boolean isVisited(int row, int col) {
-		return linkVisited[row][col] || linkVisited[col][row];
+	private Node nextToVisit(Node node) {
+		Node next = null;
+		while ((next = node.nextToVisit()) != null) {
+			if (!visitedNodes.contains(next)) {
+				return next;
+			}
+		}
+		return null;
 	}
 
-	private void visiting(int vistedRow, int vistedCol) {
-		linkVisited[vistedRow][vistedCol] = true;
-		linkVisited[vistedCol][vistedRow] = true;
+	private boolean hasToVisit(Node node) {
+		Node next = null;
+		while ((next = node.hasToVisit() ) != null) {
+			if (!visitedNodes.contains(next)) {
+				return true;
+			}
+		}
+		return false;
 	}
+
+	private void backtrack(Node node, int totalCost) {
+		totalCost -= costMatrix[node.id][nodeTo.id];
+
+		Node previous = null;
+		while (!hasToVisit(node)) {
+			node.resetNotVisitedNodes();
+			visitedNodes.remove(node);
+			if (visitedNodes.size() <= 0) {
+				backtrackNode = null;
+				return;
+			}
+
+			previous = visitedNodes.pop();
+			totalCost -= costMatrix[previous.id][node.id];
+
+			node = previous;
+		}
+		backtrackCost = totalCost;
+		backtrackNode = node;
+	}
+
 }
 
 class Node {
 	public final int id;
 	public Area area;
 	public Point point;
+	public final boolean isFrom;
+	public List<Node> adjacentNodes = new ArrayList<>();
+	public List<Node> notVisitedNodes = new ArrayList<>();
+	public Node backTrack;
 
 	public Node(int id, Area area) {
 		this.area = area;
 		this.id = id;
+		isFrom = id == 0;
 	}
 
 	public Node(int id, Point point) {
 		this.point = point;
 		this.id = id;
+		isFrom = id == 0;
+	}
+
+	public void linking(Node adjacent) {
+		adjacentNodes.add(adjacent);
+		notVisitedNodes.add(adjacent);
+
+		adjacent.adjacentNodes.add(this);
+		adjacent.notVisitedNodes.add(this);
+	}
+
+	public Node nextToVisit() {
+		if (notVisitedNodes.size() <= 0) {
+			return null;
+		}
+		Node n = notVisitedNodes.remove(0);
+		if (n.isFrom && notVisitedNodes.size() > 0) {
+			n = notVisitedNodes.remove(0);
+		}
+		return n;
+	}
+
+	public Node hasToVisit() {
+		if (notVisitedNodes.size() <= 0) {
+			return null;
+		}
+		Node n = notVisitedNodes.get(0);
+		if (n.isFrom && notVisitedNodes.size() > 1) {
+			n = notVisitedNodes.get(1);
+		}
+		return n;
+	}
+
+	public void resetNotVisitedNodes() {
+		notVisitedNodes.addAll(adjacentNodes);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return id == ((Node) o).id;
+	}
+
+	@Override
+	public int hashCode() {
+		return id;
 	}
 
 }
@@ -340,6 +446,11 @@ class Area {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "(" + x1 + ", " + y1 + ", " + x2 + ", " + y2 + ")";
+	}
+
 }
 
 class Point {
@@ -407,6 +518,11 @@ class Point {
 		}
 
 		return dx + dy;
+	}
+
+	@Override
+	public String toString() {
+		return "(" + x + ", " + y + ")";
 	}
 
 }
