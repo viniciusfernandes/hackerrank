@@ -214,13 +214,21 @@ class Graph {
 	private int backtrackCost = -1;
 
 	public void searchLowerCost(Node previous, Node next, int totalCost) {
-		if (previous == null) {
+		if (previous == null || next == null) {
 			return;
 		}
 		if (!visitedNodes.contains(previous)) {
 			visitedNodes.push(previous);
 		}
-		totalCost += costMatrix[previous.id][next.id];
+		try {
+			totalCost += costMatrix[previous.id][next.id];
+
+		}
+		catch (final NullPointerException e) {
+			System.out.println(visitedNodes);
+			System.out.println(previous);
+			System.out.println(next);
+		}
 
 		if (next == nodeTo) {
 
@@ -265,12 +273,12 @@ class Graph {
 	}
 
 	private boolean hasToVisit(Node node) {
-		Node next = null;
-		while ((next = node.hasToVisit() ) != null) {
-			if (!visitedNodes.contains(next)) {
+		for (final Node n : node.notVisitedNodes) {
+			if (!visitedNodes.contains(n)) {
 				return true;
 			}
 		}
+
 		return false;
 	}
 
@@ -360,6 +368,11 @@ class Node {
 	@Override
 	public int hashCode() {
 		return id;
+	}
+
+	@Override
+	public String toString() {
+		return "Node@" + id;
 	}
 
 }
