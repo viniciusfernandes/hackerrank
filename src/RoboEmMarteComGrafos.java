@@ -2,18 +2,7 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Stack;
-
-//2 5 1 0
-//2
-//1 3 2 4
-//3 1 4 3
-
-//0 0 4 3
-//3
-//0 0 1 5
-//2 0 5 1
-//3 2 6 4
+import java.util.TreeSet;
 
 public class RoboEmMarteComGrafos {
 	private static void teste() {
@@ -145,8 +134,10 @@ public class RoboEmMarteComGrafos {
 
 class Graph {
 	private final List<Node> nodes = new ArrayList<>(10000);
-	final Node nodeFrom;
-	final Node nodeTo;
+	private final TreeSet<Node> lowerCostNodes = new TreeSet<>();
+
+	final Node origin;
+	final Node destination;
 
 	private Node node = null;
 	private int cost = -1;
@@ -157,7 +148,6 @@ class Graph {
 	private final int lastNodeIndex;
 
 	private int countAreas;
-	private int lowerCost;
 
 	public Graph(int totalAreas, Point from, Point to) {
 		size = totalAreas + 2;
@@ -166,24 +156,38 @@ class Graph {
 
 		costMatrix = new int[size][size];
 
-		nodeFrom = new Node(firstNodeIndex, from);
+		origin = new Node(firstNodeIndex, from);
 		// SETTING NODE "TO" AS THE LAST NODE IN THE ORDER INDEXES
-		nodeTo = new Node(lastNodeIndex, to);
+		destination = new Node(lastNodeIndex, to);
 
 		// TWO NODES HAVE ADDED IN THE GRAPH
 		countAreas = 1;
 
 		cost = from.distanceOf(to);
 
-		costMatrix[nodeFrom.id][nodeTo.id] = cost;
-		costMatrix[nodeTo.id][nodeFrom.id] = cost;
+		costMatrix[origin.id][destination.id] = cost;
+		costMatrix[destination.id][origin.id] = cost;
 
-		lowerCost = cost;
+		nodes.add(origin);
+		nodes.add(destination);
 
-		nodes.add(nodeFrom);
-		nodes.add(nodeTo);
+		origin.linking(destination);
+	}
 
-		nodeFrom.linking(nodeTo);
+	public Node getLowerCostAdjacent() {
+		if (lowerCostNodes.isEmpty()) {
+			return null;
+		}
+
+		Node lowerCost = null;
+		while ((lowerCost = lowerCostNodes.pollFirst()) != null) {
+			if (!lowerCost.estimativeClosed) {
+				lowerCost.estimativeClosed = true;
+				return lowerCost;
+			}
+		}
+
+		return lowerCost;
 	}
 
 	public void add(Area a) {
@@ -201,178 +205,113 @@ class Graph {
 
 			node.linking(n);
 		}
+
+		node.cost = Integer.MAX_VALUE;
 		nodes.add(node);
 	}
 
 	public int searchLowerCost() {
-		searchLowerCost(nodeFrom, nodeFrom.nextToVisit(), 0);
-		return lowerCost;
+		origin.cost = 0;
+		origin.estimativeClosed = true;
+		destination.cost = Integer.MAX_VALUE;
+
+		searchLowerCost(origin);
+		return destination.cost;
 	}
 
-	private final Stack<Node> visitedNodes = new Stack<>();
-	private Node backtrackNode = null;
-	private int backtrackCost = -1;
-
-	public void searchLowerCost(Node previous, Node next, int totalCost) {
-		if (previous == null || next == null) {
-			return;
-		}
-		if (!visitedNodes.contains(previous)) {
-			visitedNodes.push(previous);
-		}
-		try {
-			totalCost += costMatrix[previous.id][next.id];
-
-		}
-		catch (final NullPointerException e) {
-			System.out.println(visitedNodes);
-			System.out.println(previous);
-			System.out.println(next);
-		}
-
-		if (next == nodeTo) {
-
-			if (totalCost < lowerCost) {
-				lowerCost = totalCost;
-			}
-
-			final Node nextToVisit = nextToVisit(previous);
-			if (nextToVisit != null) {
-				totalCost -= costMatrix[previous.id][next.id];
-				next = nextToVisit;
-				searchLowerCost(previous, next, totalCost);
-			}
-			else {
-				backtrack(previous, totalCost);
-				previous = backtrackNode;
-				if (previous == null) {
-					return;
-				}
-				next = previous.nextToVisit();
-				totalCost = backtrackCost;
-				searchLowerCost(previous, next, totalCost);
-			}
-		}
-		else {
-
-			previous = next;
-			next = nextToVisit(next);
-			searchLowerCost(previous, next, totalCost);
-		}
-
-	}
-
-	private Node nextToVisit(Node node) {
-		Node next = null;
-		while ((next = node.nextToVisit()) != null) {
-			if (!visitedNodes.contains(next)) {
-				return next;
-			}
-		}
-		return null;
-	}
-
-	private boolean hasToVisit(Node node) {
-		for (final Node n : node.notVisitedNodes) {
-			if (!visitedNodes.contains(n)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private void backtrack(Node node, int totalCost) {
-		totalCost -= costMatrix[node.id][nodeTo.id];
-
-		Node previous = null;
-		while (!hasToVisit(node)) {
-			node.resetNotVisitedNodes();
-			visitedNodes.remove(node);
-			if (visitedNodes.size() <= 0) {
-				backtrackNode = null;
+	private void searchLowerCost(Node previous) {
+		if (previous == destination) {
+			previous = getLowerCostAdjacent();
+			if (previous == null) {
 				return;
 			}
-
-			previous = visitedNodes.pop();
-			totalCost -= costMatrix[previous.id][node.id];
-
-			node = previous;
 		}
-		backtrackCost = totalCost;
-		backtrackNode = node;
+
+		Node adjacent = null;
+		int lowerCost = -1;
+		while ((adjacent = previous.nextToVisit()) != null) {
+			lowerCost = previous.cost + costMatrix[previous.id][adjacent.id];
+			if (lowerCost < adjacent.cost) {
+				adjacent.cost = lowerCost;
+			}
+			lowerCostNodes.add(adjacent);
+		}
+
+		searchLowerCost(getLowerCostAdjacent());
+
 	}
 
-}
+	class Node implements Comparable<Node> {
+		public final int id;
+		public Area area;
+		public Point point;
+		public List<Node> adjacents = new ArrayList<>();
+		public List<Node> notVisited = new ArrayList<>();
 
-class Node {
-	public final int id;
-	public Area area;
-	public Point point;
-	public final boolean isFrom;
-	public List<Node> adjacentNodes = new ArrayList<>();
-	public List<Node> notVisitedNodes = new ArrayList<>();
-	public Node backTrack;
+		public int cost;
+		boolean estimativeClosed;
 
-	public Node(int id, Area area) {
-		this.area = area;
-		this.id = id;
-		isFrom = id == 0;
-	}
+		public Node(int id, Area area) {
+			this.area = area;
+			this.id = id;
+		}
 
-	public Node(int id, Point point) {
-		this.point = point;
-		this.id = id;
-		isFrom = id == 0;
-	}
+		public Node(int id, Point point) {
+			this.point = point;
+			this.id = id;
+		}
 
-	public void linking(Node adjacent) {
-		adjacentNodes.add(adjacent);
-		notVisitedNodes.add(adjacent);
+		public void linking(Node adjacent) {
+			adjacents.add(adjacent);
+			notVisited.add(adjacent);
 
-		adjacent.adjacentNodes.add(this);
-		adjacent.notVisitedNodes.add(this);
-	}
+			adjacent.adjacents.add(this);
+			adjacent.notVisited.add(this);
+		}
 
-	public Node nextToVisit() {
-		if (notVisitedNodes.size() <= 0) {
+		public Node nextToVisit() {
+			if (notVisited.isEmpty()) {
+				return null;
+			}
+
+			final int length = notVisited.size();
+			Node next = null;
+			for (int i = 0; i < length; i++) {
+				next = notVisited.get(i);
+				if (!next.estimativeClosed) {
+					notVisited.remove(i);
+					return next;
+				}
+			}
+
 			return null;
 		}
-		Node n = notVisitedNodes.remove(0);
-		if (n.isFrom && notVisitedNodes.size() > 0) {
-			n = notVisitedNodes.remove(0);
+
+		@Override
+		public boolean equals(Object o) {
+			return id == ((Node) o).id;
 		}
-		return n;
-	}
 
-	public Node hasToVisit() {
-		if (notVisitedNodes.size() <= 0) {
-			return null;
+		@Override
+		public int hashCode() {
+			return id;
 		}
-		Node n = notVisitedNodes.get(0);
-		if (n.isFrom && notVisitedNodes.size() > 1) {
-			n = notVisitedNodes.get(1);
+
+		@Override
+		public String toString() {
+			return "Node@" + id;
 		}
-		return n;
-	}
 
-	public void resetNotVisitedNodes() {
-		notVisitedNodes.addAll(adjacentNodes);
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		return id == ((Node) o).id;
-	}
-
-	@Override
-	public int hashCode() {
-		return id;
-	}
-
-	@Override
-	public String toString() {
-		return "Node@" + id;
+		@Override
+		public int compareTo(Node other) {
+			if (cost < other.cost) {
+				return -1;
+			}
+			if (cost > other.cost) {
+				return 1;
+			}
+			return 0;
+		}
 	}
 
 }
