@@ -134,7 +134,7 @@ public class RoboEmMarteComGrafos {
 
 class Graph {
 	private final List<Node> nodes = new ArrayList<>(10000);
-	private final TreeSet<Node> lowerCostNodes = new TreeSet<>();
+	private final TreeSet<Node> estimatedCostNodes = new TreeSet<>();
 
 	final Node origin;
 	final Node destination;
@@ -174,20 +174,20 @@ class Graph {
 		origin.linking(destination);
 	}
 
-	public Node getLowerCostAdjacent() {
-		if (lowerCostNodes.isEmpty()) {
+	public Node getLowerCostNode() {
+		if (estimatedCostNodes.isEmpty()) {
 			return null;
 		}
 
 		Node lowerCost = null;
-		while ((lowerCost = lowerCostNodes.pollFirst()) != null) {
+		while ((lowerCost = estimatedCostNodes.pollFirst()) != null) {
 			if (!lowerCost.estimativeClosed) {
 				lowerCost.estimativeClosed = true;
 				return lowerCost;
 			}
 		}
 
-		return lowerCost;
+		return null;
 	}
 
 	public void add(Area a) {
@@ -219,25 +219,25 @@ class Graph {
 		return destination.cost;
 	}
 
-	private void searchLowerCost(Node previous) {
-		if (previous == destination) {
-			previous = getLowerCostAdjacent();
-			if (previous == null) {
-				return;
-			}
+	private void searchLowerCost(Node node) {
+		if (node == null) {
+			return;
 		}
 
-		Node adjacent = null;
 		int lowerCost = -1;
-		while ((adjacent = previous.nextToVisit()) != null) {
-			lowerCost = previous.cost + costMatrix[previous.id][adjacent.id];
+
+		for (final Node adjacent : node.adjacents) {
+			if (adjacent.estimativeClosed) {
+				continue;
+			}
+			lowerCost = node.cost + costMatrix[node.id][adjacent.id];
 			if (lowerCost < adjacent.cost) {
 				adjacent.cost = lowerCost;
 			}
-			lowerCostNodes.add(adjacent);
+			estimatedCostNodes.add(adjacent);
 		}
 
-		searchLowerCost(getLowerCostAdjacent());
+		searchLowerCost(getLowerCostNode());
 
 	}
 
@@ -267,24 +267,6 @@ class Graph {
 
 			adjacent.adjacents.add(this);
 			adjacent.notVisited.add(this);
-		}
-
-		public Node nextToVisit() {
-			if (notVisited.isEmpty()) {
-				return null;
-			}
-
-			final int length = notVisited.size();
-			Node next = null;
-			for (int i = 0; i < length; i++) {
-				next = notVisited.get(i);
-				if (!next.estimativeClosed) {
-					notVisited.remove(i);
-					return next;
-				}
-			}
-
-			return null;
 		}
 
 		@Override
