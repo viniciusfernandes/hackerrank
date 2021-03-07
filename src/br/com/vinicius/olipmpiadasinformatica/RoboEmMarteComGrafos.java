@@ -1,3 +1,4 @@
+package br.com.vinicius.olipmpiadasinformatica;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;

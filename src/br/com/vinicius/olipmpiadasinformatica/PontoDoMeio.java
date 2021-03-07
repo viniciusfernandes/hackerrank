@@ -1,3 +1,4 @@
+package br.com.vinicius.olipmpiadasinformatica;
 
 import java.math.BigDecimal;
 import java.util.Scanner;

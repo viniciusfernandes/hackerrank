@@ -1,3 +1,4 @@
+package br.com.vinicius.olipmpiadasinformatica;
 
 import java.util.Scanner;
 
@@ -45,7 +46,7 @@ public class Chuva {
 	}
 
 	private static void replace(int row, int col) {
-		if (col < 0) {
+		if (row < 0 || col < 0) {
 			return;
 		}
 		if (c[row][col] == '.' && (hasWaterDown(row, col) || hasWaterRight(row, col) || hasWaterLeft(row, col))) {
