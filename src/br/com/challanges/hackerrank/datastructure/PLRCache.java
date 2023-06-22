@@ -17,7 +17,6 @@ public class PLRCache<K, V extends Comparable<V>> {
 
   private Map<K, V> cache;
   private int capacity;
-
   private List<Pair<K, V>> pairs;
 
   public PLRCache(int capacity) {
