@@ -29,6 +29,8 @@ public class MaximunPalindrome {
     }
   }
 
+  private final long module = 1000000007;
+
   private long calculateTotalPalindromes(Collection<Freq> frequencies) {
     int pairsLength = 0;
     long nFac;
@@ -51,9 +53,9 @@ public class MaximunPalindrome {
     if (hasNoDuplicatedChars) {
       return noPairs;
     } else if (pairsLength >= 1 && noPairs == 0) {
-      return ((nFac / mFact)) % 1000000007;
+      return ((nFac / mFact)) % module;
     } else {
-      return ((nFac / mFact) * noPairs) % 1000000007;
+      return ((nFac / mFact) * noPairs) % module;
     }
   }
 
@@ -79,7 +81,7 @@ public class MaximunPalindrome {
     long fact = 1;
     for (int i = 1; i <= n; i++) {
       fact *= i;
-      fact %= 1000000007;
+      fact %= module;
     }
     return fact;
   }
