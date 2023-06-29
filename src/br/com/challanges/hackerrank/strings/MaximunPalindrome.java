@@ -97,7 +97,7 @@ public class MaximunPalindrome {
     return calculateTotalPalindromes(table.values());
   }
 
-  public static void main(String[] args) {
+  public static void test() {
     scenario1();
     scenario2();
     scenario3();
@@ -106,7 +106,8 @@ public class MaximunPalindrome {
     scenario6();
   }
 
-  public static void bbmain(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException {
+    test();
     BufferedReader bufferedReader =
         new BufferedReader(
             new InputStreamReader(
@@ -178,6 +179,28 @@ public class MaximunPalindrome {
     if (value != expected) {
       System.err.println(String.format(
           "The test \"%s\" has got value %s, but the the expected value is %s", name, value, expected));
+    }
+  }
+
+  private class Leaf implements Comparable<Leaf> {
+    int time;
+    int position;
+
+    public Leaf(int time,
+                int position) {
+      this.time = time;
+      this.position = position;
+    }
+
+    public int compareTo(Leaf other) {
+      if (position > other.position) {
+        return 1;
+      }
+      if (position == other.position) {
+        return Integer.compare(time, other.time);
+      }
+      return -1;
+
     }
   }
 }
