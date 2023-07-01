@@ -28,7 +28,7 @@ public class MaximumElement {
           if (num <= 0 || num > 1000000000) {
             return Collections.emptyList();
           }
-          if (maxStack.isEmpty() || num > maxStack.peek()) {
+          if (maxStack.isEmpty() || num >= maxStack.peek()) {
             maxStack.push(num);
           }
           break;
@@ -69,7 +69,7 @@ public class MaximumElement {
     List<Integer> maxValues = getMax(ops);
     var string = new StringBuilder();
     for (var max : maxValues) {
-      string.append(String.valueOf(max)).append("\n");
+      string.append(max).append("\n");
     }
     bufferedWriter.write(string.toString());
     bufferedReader.close();
