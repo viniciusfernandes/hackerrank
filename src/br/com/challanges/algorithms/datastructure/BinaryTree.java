@@ -54,6 +54,7 @@ public class BinaryTree {
         return n;
     }
 
+
     public void transverse() {
         Node prev = null;
         Node next;
