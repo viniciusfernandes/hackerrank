@@ -1,18 +1,60 @@
 package br.com.challanges.algorithms.datastructure;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 public class BinaryHeap {
     private int[] heap;
     private int n;
 
+    public BinaryHeap() {
+        this(0);
+    }
+
     public BinaryHeap(int capacity) {
         heap = new int[capacity];
     }
 
-    public BinaryHeap(int[] heap) {
-        this.heap = heap;
-        n = heap.length;
+    public void sort(int[] a) {
+        if (a == null) {
+            return;
+        }
+        if (a.length <= 1) {
+            return;
+        }
+        for (int i = a.length - 1; i >= 0; i--) {
+            int p = parent(i);
+            int l = left(p);
+            if (a[i] < a[l]) {
+                if (a[i] < a[p]) {
+                    swap(a, i, p);
+                }
+            } else if (a[l] < a[p]) {
+                swap(a, l, p);
+            }
+        }
+    }
+
+    private void reverse() {
+        for (int i = 0; i < n / 2; i++) {
+            int t = heap[i];
+            heap[i] = heap[n - 1 - i];
+            heap[n - 1 - i] = t;
+        }
+    }
+
+    public boolean check() {
+        if (n <= 1) {
+            return true;
+        }
+        int p, i = n;
+        do {
+            p = parent(--i);
+            if (heap[p] > heap[i]) {
+                return false;
+            }
+        } while (i > 0);
+        return true;
     }
 
     public int size() {
@@ -31,6 +73,10 @@ public class BinaryHeap {
         heap[n++] = value;
         bubbleUp(n - 1);
         return true;
+    }
+
+    public boolean isEmpty() {
+        return n <= 0;
     }
 
     public void print() {
@@ -57,36 +103,41 @@ public class BinaryHeap {
         return val;
     }
 
-    private void trickleDown(int i) {
-        int r, j;
-        do {
-            r = right(i);
-            if (r < n && heap[r] < heap[i]) {
-                int l = left(i);
-                if (heap[l] < heap[i]) {
-                    j = l;
-                } else {
-                    j = r;
-                }
-            } else {
-                int l = left(i);
-                if (l < n && heap[l] < heap[i]) {
-                    j = l;
-                } else {
-                    break;
-                }
-            }
-            if (j >= 0) {
-                swap(i, j);
-            }
-            i = j;
-        } while (i >= 0);
+    public int get(int i) {
+        if (i < 0 || i >= n) {
+            throw new IndexOutOfBoundsException("Failure on getting the index " + i
+                    + " when the last heap index is " + (n - 1));
+        }
+        return heap[i];
     }
 
-    private void swap(int i, int j) {
-        int t = heap[i];
-        heap[i] = heap[j];
-        heap[j] = t;
+    public void trickleDown(int p) {
+        int r, l, j = 0;
+        do {
+            r = right(p);
+            l = left(p);
+            if (l < n && heap[l] < heap[p]) {
+                j = l;
+            }
+            if (r < n && heap[r] < heap[p]) {
+                j = r;
+            }
+            if (r >= n) {
+                break;
+            }
+            swap(p, j);
+            p = j;
+        } while (p >= 0);
+    }
+
+    public void swap(int i, int j) {
+        swap(heap, i, j);
+    }
+
+    private void swap(int[] a, int i, int j) {
+        int t = a[i];
+        a[i] = a[j];
+        a[j] = t;
     }
 
     private void bubbleUp(int i) {
@@ -118,8 +169,9 @@ public class BinaryHeap {
     public static void main(String[] args) {
         int[] values = new int[]{4, 9, 8, 17, 26, 50, 16, 19, 69, 32, 93, 55};
         //int[] values = new int[]{4, 9, 8, 17};
-        BinaryHeap heap = new BinaryHeap(values);
+        BinaryHeap heap = new BinaryHeap(3);
         heap.print();
+        System.out.println(heap.check());
 
         heap.clear();
         for (int i = 0; i < values.length; i++) {

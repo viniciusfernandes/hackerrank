@@ -21,6 +21,10 @@ public class Stack<T> implements Iterable<T> {
         return n;
     }
 
+    public boolean isEmpty() {
+        return n <= 0;
+    }
+
 
     public void add(int i, T e) {
         if (i < 0 || i >= n) {
@@ -57,7 +61,7 @@ public class Stack<T> implements Iterable<T> {
         n += els.length;
     }
 
-    public void add(T[] els) {
+    public void push(T[] els) {
         if (arr.length - n < els.length) {
             int empty = arr.length - n;
             int diff = els.length - empty;
@@ -69,7 +73,7 @@ public class Stack<T> implements Iterable<T> {
         n += els.length;
     }
 
-    public void add(T e) {
+    public void push(T e) {
         if (n >= arr.length) {
             arr = Arrays.copyOf(arr, n + shift);
         }
@@ -96,11 +100,11 @@ public class Stack<T> implements Iterable<T> {
 
     public static void main(String[] args) {
         var q = new Stack<String>(0);
-        q.add("a");
-        q.add("b");
+        q.push("a");
+        q.push("b");
         q.add(0, "x");
         q.add(2, new String[]{"y1", "y2"});
-        q.add(new String[]{"W1", "W2"});
+        q.push(new String[]{"W1", "W2"});
         while (q.size() > 0) {
             System.out.println("queue element=" + q.pop());
         }
