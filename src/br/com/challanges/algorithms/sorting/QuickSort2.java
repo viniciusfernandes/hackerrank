@@ -1,9 +1,7 @@
 package br.com.challanges.algorithms.sorting;
 
-import java.util.Map;
-
-public class QuickSort {
-    private QuickSort() {
+public class QuickSort2 {
+    private QuickSort2() {
     }
 
     public static void sort(int[] a) {
@@ -17,24 +15,26 @@ public class QuickSort {
         if (n <= 1) {
             return;
         }
-        int x = a[i + randomIndex(n)];
-        int l = i - 1, r = i + n, j = i;
+        int pIdx = randomIndex(i, n);
+        int piv = a[pIdx];
+        int r = n - 1;
+        int j = i;
+        int l = i - 1;
         while (j < r) {
-            if (a[j] < x) {
+            if (a[j] > piv) {
+                swap(a, j, r--);
+            } else if (a[j] < piv) {
                 swap(a, j++, ++l);
-            } else if (a[j] > x) {
-                swap(a, j, --r);
             } else {
                 j++;
             }
         }
-
-        sort(a, i, l - (i - 1));
-        sort(a, r, n - (r - i));
+        sort(a, 0, j);
+        sort(a, j  , n - (r -1) );
     }
 
-    private static int randomIndex(int n) {
-        return (int) Math.random() * (n - 1);
+    private static int randomIndex(int shift, int n) {
+        return shift + (int) Math.random() * (n - 1);
     }
 
     private static void swap(int[] a, int i, int j) {
@@ -50,8 +50,6 @@ public class QuickSort {
         for (int i = 0; i < values.length; i++) {
             System.out.print(values[i] + " ");
         }
-        Map.of("x", null);
     }
-
 
 }

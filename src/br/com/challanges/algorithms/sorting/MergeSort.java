@@ -33,7 +33,7 @@ public class MergeSort {
     }
 
     public static void main(String[] args) {
-        int[] values = new int[]{100, 2, 77, 3, -1};
+        int[] values = new int[]{-10,100, 2, 77, 3, -1};
         sort(values);
         for (int i = 0; i < values.length; i++) {
             System.out.print(values[i] + " ");

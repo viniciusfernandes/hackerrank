@@ -4,7 +4,7 @@ public class BubbleSort {
     private BubbleSort() {
     }
 
-    public static void sort(int[] a) {
+    public void sort(int[] a) {
         if (a == null || a.length <= 1) {
             return;
         }
