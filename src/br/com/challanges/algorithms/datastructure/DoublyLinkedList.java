@@ -1,7 +1,6 @@
 package br.com.challanges.algorithms.datastructure;
 
-import java.util.ArrayList;
-import java.util.List;
+import static br.com.challanges.algorithms.datastructure.utils.Assertions.assertEquals;
 
 public class DoublyLinkedList<T> {
     private class Node<V> {
@@ -20,56 +19,53 @@ public class DoublyLinkedList<T> {
         }
     }
 
-    Node<T> head;
-    Node<T> tail;
-    int n;
+    private Node<T> dummy;
+    private int n;
+
+    public DoublyLinkedList() {
+        dummy = new Node<>(null);
+        dummy.prev = dummy;
+        dummy.next = dummy;
+    }
 
     public void add(T value) {
-        var node = new Node<>(value);
-        if (head == null) {
-            head = node;
-            tail = head;
-        } else if (head.next == null) {
-            tail = node;
-            tail.prev = head;
-            head.next = tail;
-        } else {
-            tail.next = node;
-            node.prev = tail;
-            tail = node;
+        if (n == 0) {
+            add(0, value);
+            return;
         }
+        var newNode = new Node<>(value);
+        var last = dummy.next;
+        last.next = newNode;
+        newNode.prev = last;
+        dummy.next = newNode;
         n++;
     }
 
     public void add(int i, T value) {
-        if (i < 0 || i >= n) {
+        if (i < 0 || i > n) {
             throw new IndexOutOfBoundsException();
         }
-        var node = new Node<>(value);
-        if (i == 0) {
-            node.next = head;
-            head.prev = node;
-            head = node;
+        if (n == 0) {
+            var newNode = new Node<>(value);
+            dummy.prev = newNode;
+            dummy.next = newNode;
         } else {
-            var curr = head;
-            int count = 1;
-            while (count <= i) {
-                curr = curr.next;
-                count++;
+            var newNode = new Node<>(value);
+            var currNode = getNode(i);
+            newNode.next = currNode;
+            newNode.prev = currNode.prev;
+            if (currNode.prev != null) {
+                currNode.prev.next = newNode;
             }
-            node.next = curr;
-            node.prev = curr.prev;
-            node.prev.next = node;
-            node.next.prev = node;
+            currNode.prev = newNode;
+            dummy.prev = newNode;
         }
         n++;
     }
 
     public T set(int i, T value) {
-        if (i < 0 || i >= n) {
-            throw new IndexOutOfBoundsException();
-        }
-        var curr = head;
+        validateIndex(i);
+        var curr = dummy.prev;
         int count = 0;
         while (count >= i) {
             curr = curr.next;
@@ -80,89 +76,107 @@ public class DoublyLinkedList<T> {
         return old;
     }
 
-    public T remove() {
-        if (n == 0) {
-            throw new IndexOutOfBoundsException();
+    public T remove(int i) {
+        validateIndex(i);
+        Node<T> curr = null;
+        if (i < n / 2) {
+            var count = 0;
+            do {
+                if (curr == null) {
+                    curr = dummy.prev;
+                } else {
+                    curr = curr.next;
+                }
+            }
+            while (++count <= i);
+        } else {
+            int count = n - 1;
+            do {
+                if (curr == null) {
+                    curr = dummy.next;
+                } else {
+                    curr = curr.prev;
+                }
+            }
+            while (--count >= i);
         }
-        var old = head.value;
-        head = head.next;
+        var old = curr.value;
+        if (i == 0) {
+            dummy.prev = curr.next;
+        } else if (i == n - 1) {
+            dummy.next = curr.prev;
+        }
+        var prev = curr.prev;
+        if (prev != null) {
+            prev.next = curr.next;
+        }
+        if (curr.next != null) {
+            curr.next.prev = prev;
+        }
         n--;
         return old;
     }
 
-    public List<T> toList() {
-        var list = new ArrayList<>(n);
-        var node = head;
-        while (node != null) {
-            list.add(node.value);
-            node = node.next;
+    private Node<T> getNode(int i) {
+        if (n == 0 || i < 0 || i > n) {
+            throw new IndexOutOfBoundsException();
         }
-        return (List<T>) list;
+        Node<T> node = dummy.prev;
+        if (i < n / 2) {
+            for (int j = 0; j <= i; j++) {
+                if (j == i) {
+                    break;
+                }
+                node = node.next;
+            }
+        } else {
+            node = dummy.next;
+            for (int j = n - 1; j >= i; j--) {
+                if (j == i) {
+                    break;
+                }
+                node = node.prev;
+            }
+        }
+        return node;
+    }
+
+    public T get(int i) {
+        Node<T> node = getNode(i);
+        return node != null ? node.value : null;
     }
 
     public int size() {
         return n;
     }
 
-    public boolean checkSize() {
-        var count = 0;
-        var node = head;
-        while (node != null) {
-            count++;
-            node = node.next;
-        }
-        return count == n;
-    }
-
-
-    public void reverse() {
-        if (head == null || head == tail) {
-            return;
-        }
-        tail = head;
-        Node node = head.next;
-        Node next;
-        while (node != null) {
-            next = node.next;
-            if (node.next != null) {
-                node.next.prev = node.prev;
-            }
-            if (node.prev != null) {
-                node.prev.next = node.next;
-            }
-
-            node.prev = null;
-            node.next = head;
-            node.next.prev = node;
-            head = node;
-            node = next;
+    private void validateIndex(int i) {
+        if (i < 0 || i >= n) {
+            throw new IndexOutOfBoundsException();
         }
     }
 
     public static void main(String[] args) {
-        var dlist = new DoublyLinkedList<String>();
-        dlist.add("a");
-        dlist.add("b");
-        dlist.add("c");
-        dlist.add("d");
-        //dlist.add("x");
-        dlist.reverse();
-        // dlist.reverse2();
+        var l = new DoublyLinkedList<String>();
+        l.add("a");
+        l.add("b");
+        l.add("c");
+        l.add("d");
 
-        dlist.toList().forEach( System.out::println );
-        System.out.println(dlist.checkSize());
-        System.out.println("XXXXXXXXXXXXX");
-        var x = 17612864;
-        while (x > 0) {
-            System.out.print(x % 2);
-            x = x / 2;
-        }
-        var bits = "11000010000000".toCharArray();
-        int num = 0;
-        for (int i = 0; i < bits.length; i++) {
-            num += bits[i] == '0' ? 0 : pow(i);
-        }
-        System.out.println("\n"+num);
+        assertEquals("a", l.get(0));
+        assertEquals("b", l.get(1));
+        assertEquals("c", l.get(2));
+        assertEquals("d", l.get(3));
+        assertEquals(4, l.size());
+
+        assertEquals("c", l.remove(2));
+        assertEquals("d", l.remove(2));
+        assertEquals("a", l.remove(0));
+        assertEquals("b", l.remove(0));
+        assertEquals(0, l.size());
+
+        l.add("z");
+        assertEquals(1, l.size());
     }
 
     static int pow(int i) {
