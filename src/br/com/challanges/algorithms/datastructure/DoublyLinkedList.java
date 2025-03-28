@@ -19,13 +19,12 @@ public class DoublyLinkedList<T> {
         }
     }
 
-    private Node<T> dummy;
+    private Node<T> head;
+    private Node<T> tail;
     private int n;
 
     public DoublyLinkedList() {
-        dummy = new Node<>(null);
-        dummy.prev = dummy;
-        dummy.next = dummy;
+        tail = head = new Node<>(null);
     }
 
     public void add(T value) {
@@ -34,10 +33,10 @@ public class DoublyLinkedList<T> {
             return;
         }
         var newNode = new Node<>(value);
-        var last = dummy.next;
+        var last = tail;
         last.next = newNode;
         newNode.prev = last;
-        dummy.next = newNode;
+        tail = newNode;
         n++;
     }
 
@@ -47,8 +46,7 @@ public class DoublyLinkedList<T> {
         }
         if (n == 0) {
             var newNode = new Node<>(value);
-            dummy.prev = newNode;
-            dummy.next = newNode;
+            tail = head = newNode;
         } else {
             var newNode = new Node<>(value);
             var currNode = getNode(i);
@@ -58,14 +56,14 @@ public class DoublyLinkedList<T> {
                 currNode.prev.next = newNode;
             }
             currNode.prev = newNode;
-            dummy.prev = newNode;
+            head = newNode;
         }
         n++;
     }
 
     public T set(int i, T value) {
         validateIndex(i);
-        var curr = dummy.prev;
+        var curr = head;
         int count = 0;
         while (count >= i) {
             curr = curr.next;
@@ -83,7 +81,7 @@ public class DoublyLinkedList<T> {
             var count = 0;
             do {
                 if (curr == null) {
-                    curr = dummy.prev;
+                    curr = head;
                 } else {
                     curr = curr.next;
                 }
@@ -93,7 +91,7 @@ public class DoublyLinkedList<T> {
             int count = n - 1;
             do {
                 if (curr == null) {
-                    curr = dummy.next;
+                    curr = tail;
                 } else {
                     curr = curr.prev;
                 }
@@ -102,9 +100,9 @@ public class DoublyLinkedList<T> {
         }
         var old = curr.value;
         if (i == 0) {
-            dummy.prev = curr.next;
+            head = curr.next;
         } else if (i == n - 1) {
-            dummy.next = curr.prev;
+            tail = curr.prev;
         }
         var prev = curr.prev;
         if (prev != null) {
@@ -121,7 +119,7 @@ public class DoublyLinkedList<T> {
         if (n == 0 || i < 0 || i > n) {
             throw new IndexOutOfBoundsException();
         }
-        Node<T> node = dummy.prev;
+        Node<T> node = head;
         if (i < n / 2) {
             for (int j = 0; j <= i; j++) {
                 if (j == i) {
@@ -130,7 +128,7 @@ public class DoublyLinkedList<T> {
                 node = node.next;
             }
         } else {
-            node = dummy.next;
+            node = tail;
             for (int j = n - 1; j >= i; j--) {
                 if (j == i) {
                     break;
@@ -148,6 +146,11 @@ public class DoublyLinkedList<T> {
 
     public int size() {
         return n;
+    }
+
+    private void clear() {
+        tail = head = new Node<>(null);
+        n = 0;
     }
 
     private void validateIndex(int i) {
@@ -177,6 +180,20 @@ public class DoublyLinkedList<T> {
 
         l.add("z");
         assertEquals(1, l.size());
+
+        l.clear();
+        assertEquals(0, l.size());
+
+        l.add("p");
+        l.add("q");
+        l.add("r");
+        l.add(2, "s");
+        assertEquals("s", l.get(2));
+        assertEquals(4, l.size());
+
+        l.add(0, "x");
+        assertEquals("x", l.get(0));
+        assertEquals(5, l.size());
     }
 
     static int pow(int i) {
