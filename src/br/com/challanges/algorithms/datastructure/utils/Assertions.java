@@ -7,6 +7,14 @@ public class Assertions {
         }
     }
 
+    public static <T> void assertEquals(T[] a, T[] b) {
+        for (int j = 0; j < a.length; j++) {
+            if (!a[j].equals(b[j])) {
+                throw new RuntimeException("Elementos do indice=" + j + " nao são iguais. Valor1=" + a[j] + " e valor2=" + b[j]);
+            }
+        }
+    }
+
     public static void assertTrue(boolean b) {
         if (!b) {
             throw new RuntimeException("O valor experado=true. Valor atual=false");

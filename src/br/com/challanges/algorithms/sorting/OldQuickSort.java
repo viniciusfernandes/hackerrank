@@ -2,8 +2,8 @@ package br.com.challanges.algorithms.sorting;
 
 import java.util.Map;
 
-public class QuickSort {
-    private QuickSort() {
+public class OldQuickSort {
+    private OldQuickSort() {
     }
 
     public static void sort(int[] a) {
