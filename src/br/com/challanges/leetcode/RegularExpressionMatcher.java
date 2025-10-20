@@ -1,5 +1,7 @@
 package br.com.challanges.leetcode;
 
+import br.com.challanges.algorithms.datastructure.utils.Assertions;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,10 +40,10 @@ public class RegularExpressionMatcher {
         if (!isValidLength(input) || !isValidInput(input)) {
             return false;
         }
-        return match(root, input, 0, new HashSet<>());
+        return match(root, input, 0, 0, new HashSet<>());
     }
 
-    private boolean match(State state, String input, int i, Set<String> visited) {
+    private boolean match(State state, String input, int i, int p, Set<String> visited) {
         if (state == null) {
             return false;
         }
@@ -52,11 +54,12 @@ public class RegularExpressionMatcher {
             return true;
         }
         if (state.c == 0) {
-            return match(state.out1, input, i, visited) ||
-                    match(state.out2, input, i, visited);
+            p = i;
+            return match(state.out1, input, i, p, visited) ||
+                    match(state.out2, input, i, p, visited);
         }
-        if (i < input.length() && (state.c == '.' || state.c == input.charAt(i))) {
-            return match(state.out1, input, i + 1, visited);
+        if (i < input.length() && (state.c == '.' || state.c == input.charAt(p))) {
+            return match(state.out1, input, i + 1, p, visited);
         }
         return false;
     }
@@ -87,7 +90,6 @@ public class RegularExpressionMatcher {
                 if (prev == null) {
                     throw new IllegalStateException("Invalid pattern: '*' cannot appear first");
                 }
-
                 State split = new State((char) 0);
                 State accept = new State((char) 0, true);
 
@@ -177,15 +179,28 @@ public class RegularExpressionMatcher {
     }
 
     public static void main(String[] args) {
-        RegularExpressionMatcher matcher = new RegularExpressionMatcher("a*b");
-//        System.out.println(matcher.match(""));
-        System.out.println(matcher.match("aab"));
-//        System.out.println(matcher.match("aa"));
-//        System.out.println(matcher.match("aaa"));
-        System.out.println(matcher.match("b"));
-        System.out.println(matcher.match("abxxxxxxx"));
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("a*");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertTrue(matcher.match("aa"));
+        Assertions.assertTrue(matcher.match("aa"));
+        Assertions.assertTrue(matcher.match("aaa"));
+        Assertions.assertFalse(matcher.match("b"));
+        Assertions.assertFalse(matcher.match("abxxxxxxx"));
 
+        matcher = new RegularExpressionMatcher("a");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertTrue(matcher.match("a"));
+        Assertions.assertFalse(matcher.match("aa"));
+        Assertions.assertFalse(matcher.match("b"));
+        Assertions.assertFalse(matcher.match("abxxxxxxx"));
 
+        matcher = new RegularExpressionMatcher("a*b");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertTrue(matcher.match("ab"));
+        Assertions.assertTrue(matcher.match("aab"));
+        Assertions.assertTrue(matcher.match("aaab"));
+        Assertions.assertFalse(matcher.match("b"));
+        Assertions.assertFalse(matcher.match("abxxxxxxx"));
     }
 
 
