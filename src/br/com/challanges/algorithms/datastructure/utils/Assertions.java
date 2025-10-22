@@ -1,5 +1,7 @@
 package br.com.challanges.algorithms.datastructure.utils;
 
+import java.util.List;
+
 public class Assertions {
     public static void assertEquals(Object a, Object b) {
         if (!a.equals(b)) {
@@ -7,7 +9,14 @@ public class Assertions {
         }
     }
 
+    public static <T> void assertEquals(List<T> a, List<T> b) {
+        assertEquals(a.toArray(), b.toArray());
+    }
+
     public static <T> void assertEquals(T[] a, T[] b) {
+        if (a.length != b.length) {
+            throw new RuntimeException("As listas devem ter o mesmo tamanho");
+        }
         for (int j = 0; j < a.length; j++) {
             if (!a[j].equals(b[j])) {
                 throw new RuntimeException("Elementos do indice=" + j + " nao são iguais. Valor1=" + a[j] + " e valor2=" + b[j]);
