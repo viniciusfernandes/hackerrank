@@ -1,6 +1,8 @@
 package br.com.challanges.algorithms.graph;
 
-public class Node {
+import java.util.Objects;
+
+public class Node implements Comparable<Node> {
     final String id;
     final int weight;
 
@@ -15,5 +17,10 @@ public class Node {
                 "id='" + id + '\'' +
                 ", weight=" + weight +
                 '}';
+    }
+
+    @Override
+    public int compareTo(Node o) {
+        return Integer.compare(this.weight, o.weight);
     }
 }

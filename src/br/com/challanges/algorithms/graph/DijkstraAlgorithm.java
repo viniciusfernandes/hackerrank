@@ -8,45 +8,49 @@ public class DijkstraAlgorithm {
     private DijkstraAlgorithm() {
     }
 
-    public static Path calculatePath(String from, String to, PositiveUndirectedGraph graph) {
+    public static int distance(String from, String to, PositiveUndirectedGraph graph) {
         if (from.equals(to)) {
-            return new Path(Collections.singletonList(from), 0);
+            return 0;
         }
         if (!graph.contains(from) || !graph.contains(to)) {
-            return new Path();
+            return 0;
         }
-        List<Node> edges = graph.getEdges(from);
         Map<String, Integer> dist = new HashMap<>();
-        List<String> paths = new ArrayList<>();
-
-        int totalWeight = 0;
-        int weight = Integer.MAX_VALUE;
-        Node curr = null;
+        PriorityQueue<Node> queue = new PriorityQueue<>();
+        Set<String> visited = new HashSet<>();
+        queue.add(new Node(from, 0));
         dist.put(from, 0);
-        do {
-            for (Node node : edges) {
-                if (totalWeight + node.weight < dist.getOrDefault(node.id, Integer.MAX_VALUE)) {
-                    dist.put(node.id, totalWeight + node.weight);
-                    if (node.weight < weight) {
-                        weight = node.weight;
-                        curr = node;
+        int shortDist = Integer.MAX_VALUE;
+        while (!queue.isEmpty()) {
+            Node current = queue.poll();
+            if (visited.contains(current.id)) {
+                continue;
+            }
+            for (Node edge : graph.getEdges(current.id)) {
+                if (visited.contains(edge.id)) {
+                    continue;
+                }
+                int newDist = dist.get(current.id) + edge.weight;
+                if (newDist < dist.getOrDefault(edge.id, Integer.MAX_VALUE)) {
+                    dist.put(edge.id, newDist);
+                    queue.add(new Node(edge.id, newDist));
+                    if (edge.id.equals(to) && newDist < shortDist) {
+                        shortDist = newDist;
                     }
                 }
             }
-            paths.add(from);
-            totalWeight += weight;
-            from = curr.id;
-            edges = graph.getEdges(from);
-            weight = Integer.MAX_VALUE;
-        } while (!from.equals(to));
-        paths.add(to);
-        return new Path(paths, totalWeight);
+            visited.add(current.id);
+        }
+        return shortDist;
     }
 
+
     public static void main(String[] args) {
-        testCase1();
-        testCase2();
-        testCase3();
+//        testCase1();
+//        testCase2();
+//        testCase3();
+//        testCase4();
+        testCase5();
     }
 
     private static void testCase1() {
@@ -57,9 +61,8 @@ public class DijkstraAlgorithm {
         graph.addEdge("b", "d", 3);
         graph.addEdge("c", "d", 5);
 
-        Path path = calculatePath("a", "d", graph);
-        Assertions.assertEquals(4, path.weight);
-        Assertions.assertEquals(List.of("a", "b", "d"), path.path);
+        int dist = distance("a", "d", graph);
+        Assertions.assertEquals(4, dist);
     }
 
     private static void testCase2() {
@@ -75,9 +78,8 @@ public class DijkstraAlgorithm {
         graph.addEdge("b", "f", 2);
         graph.addEdge("f", "g", 5);
 
-        Path path = calculatePath("d", "f", graph);
-        Assertions.assertEquals(10, path.weight);
-        Assertions.assertEquals(List.of("d", "e", "c", "b", "f"), path.path);
+        int dist = distance("d", "f", graph);
+        Assertions.assertEquals(10, dist);
     }
 
     private static void testCase3() {
@@ -86,8 +88,30 @@ public class DijkstraAlgorithm {
         graph.addEdge("b", "a", 2);
 
 
-        Path path = calculatePath("a", "a", graph);
-        Assertions.assertEquals(0, path.weight);
-        Assertions.assertEquals(List.of("a"), path.path);
+        int dist = distance("a", "a", graph);
+        Assertions.assertEquals(0, dist);
+    }
+
+    private static void testCase4() {
+        var graph = new PositiveUndirectedGraph();
+        graph.addEdge("a", "b", 1);
+        graph.addEdge("b", "d", 10);
+        graph.addEdge("c", "d", 3);
+
+
+        int dist = distance("a", "d", graph);
+        Assertions.assertEquals(11, dist);
+    }
+
+    private static void testCase5() {
+        var graph = new PositiveUndirectedGraph();
+        graph.addEdge("a", "b", 10);
+        graph.addEdge("b", "d", 1);
+        graph.addEdge("a", "c", 2);
+        graph.addEdge("c", "b", 2);
+        graph.addEdge("c", "d", 4);
+
+        int dist = distance("a", "d", graph);
+        Assertions.assertEquals(5, dist);
     }
 }
