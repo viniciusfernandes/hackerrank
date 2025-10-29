@@ -46,10 +46,10 @@ public class DijkstraAlgorithm {
 
 
     public static void main(String[] args) {
-//        testCase1();
-//        testCase2();
-//        testCase3();
-//        testCase4();
+        testCase1();
+        testCase2();
+        testCase3();
+        testCase4();
         testCase5();
     }
 
