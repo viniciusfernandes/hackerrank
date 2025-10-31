@@ -54,21 +54,30 @@ public class RegularExpressionMatcher {
             return true;
         }
         if (state.op == '*') {
-            if (state.next.c == '.') {
-                while (i < input.length() && state.c == input.charAt(i)) {
-                    i++;
-                }
-                return match(state.next, input, i);
-            }
-
-            if (state.c == '.') {
+            if (state.c == '.' && state.next.c != '.') {
                 while (i < input.length() && state.next.c != input.charAt(i)) {
                     i++;
                 }
                 return match(state.next, input, i);
-            }
+            } else if (state.c == '.' && state.next.c == '.') {
+                State last = state;
+                do {
+                    if (last.isAccept) {
+                        return true;
+                    }
+                    last = last.next;
+                } while (last.c == '.' || last.op == '*');
 
-            if (state.next.c == input.charAt(i)) {
+                while (i < input.length() && last.c != input.charAt(i)) {
+                    i++;
+                }
+                return match(last, input, i);
+            } else if (state.next.c == '.') {
+                while (i < input.length() && state.c == input.charAt(i)) {
+                    i++;
+                }
+                return match(state.next, input, i);
+            } else if (state.next.c == input.charAt(i)) {
                 return match(state.next, input, i);
             } else {
                 while (i < input.length() && state.c == input.charAt(i)) {
@@ -155,6 +164,7 @@ public class RegularExpressionMatcher {
         test4();
         test5();
         test6();
+        test7();
     }
 
     private static void test1() {
@@ -211,6 +221,17 @@ public class RegularExpressionMatcher {
         Assertions.assertTrue(matcher.match("cb"));
         Assertions.assertTrue(matcher.match("acb"));
         Assertions.assertFalse(matcher.match("acxb"));
+        Assertions.assertFalse(matcher.match("a"));
+        Assertions.assertFalse(matcher.match("b"));
+    }
+
+    private static void test7() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("a.*.b");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertFalse(matcher.match("cb"));
+        Assertions.assertTrue(matcher.match("acb"));
+        Assertions.assertTrue(matcher.match("acxb"));
+        Assertions.assertTrue(matcher.match("aqwertxb"));
         Assertions.assertFalse(matcher.match("a"));
         Assertions.assertFalse(matcher.match("b"));
     }
