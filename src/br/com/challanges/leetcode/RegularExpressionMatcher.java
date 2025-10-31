@@ -2,24 +2,27 @@ package br.com.challanges.leetcode;
 
 import br.com.challanges.algorithms.datastructure.utils.Assertions;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class RegularExpressionMatcher {
     private final State root;
 
     private static class State {
-        char c;         // transition character, or 0 for epsilon
-        State out1;
-        State out2;
+        final char c;
+        final char op;
+        State next;
         boolean isAccept;
 
         State(char c) {
             this.c = c;
+            this.op = c;
+        }
+
+        State(char c, char operator) {
+            this.c = c;
+            this.op = operator;
         }
 
         State(char c, boolean isAccept) {
-            this.c = c;
+            this(c);
             this.isAccept = isAccept;
         }
 
@@ -40,39 +43,29 @@ public class RegularExpressionMatcher {
         if (!isValidLength(input) || !isValidInput(input)) {
             return false;
         }
-        return match(root, input, 0, 0, new HashSet<>());
+        return match(root, input, 0);
     }
 
-    private boolean match(State state, String input, int i, int p, Set<String> visited) {
-        if (state == null) {
+    private boolean match(State curr, String input, int i) {
+        if (curr == null) {
             return false;
         }
-        if (!visited.add(state.hashCode() + ":" + i)) {
-            return false;
-        }
-        if (state.isAccept && i == input.length()) {
+        if (curr.isAccept && i == input.length()) {
             return true;
         }
-        if (state.c == 0) {
-            p = i;
-            return match(state.out1, input, i, p, visited) ||
-                    match(state.out2, input, i, p, visited);
+        if (curr.op == '*') {
+            if (curr.next.c == input.charAt(i)) {
+                return match(curr.next, input, i);
+            }
+            while (i < input.length() && curr.c == input.charAt(i)) {
+                i++;
+            }
+            return match(curr.next, input, i);
         }
-        if (i < input.length() && (state.c == '.' || state.c == input.charAt(p))) {
-            return match(state.out1, input, i + 1, p, visited);
+        if (i < input.length() && (curr.c == '.' || curr.c == input.charAt(i))) {
+            return match(curr.next, input, i + 1);
         }
         return false;
-    }
-
-
-    // 🆕 NEW helper replaces `findTail()` and prevents infinite ε-loops
-    private static State findAttachPoint(State s) {
-        Set<State> visited = new HashSet<>();          // 🆕 avoid ε-cycles
-        while (s != null && s.out1 != null && s.c != 0) {
-            if (!visited.add(s)) break;                // 🆕 prevent looping forever
-            s = s.out1;
-        }
-        return s;
     }
 
     private State buildNFA(String pattern) {
@@ -82,67 +75,29 @@ public class RegularExpressionMatcher {
 
         char[] chars = pattern.toCharArray();
         State start = null;
-        State last = null;   // last created node
-        State prev = null;   // track previous literal or '.'
-
-        for (char c : chars) {
-            if (c == '*') {
-                if (prev == null) {
+        State last = null;
+        for (int i = 0; i < chars.length; i++) {
+            char c = chars[i];
+            State state;
+            if (i + 1 < chars.length && chars[i + 1] == '*') {
+                if (c == '*' && last == null) {
                     throw new IllegalStateException("Invalid pattern: '*' cannot appear first");
                 }
-                State split = new State((char) 0);
-                State accept = new State((char) 0, true);
-
-                split.out1 = prev;
-                split.out2 = accept;
-                prev.out1 = split;
-
-                if (last != prev) {
-                    last.out1 = split;
-                }
-
-                if (start == prev) {
-                    start = split;
-                }
-
-                last = accept;
-                prev = null;
-                continue;
-            } else if (c == '.') {
-                State dot = new State('.');
-                State accept = new State((char) 0, true);
-                dot.out1 = accept;
-
-                if (last != null) {
-                    last.out1 = dot;
-                } else {
-                    start = dot;
-                }
-
-                last = accept;
-                prev = dot;
-                continue;
-            }
-
-            if (last != null) {
-                State next = new State(c);
-                last.out1 = next;
-                last = next;
-                prev = next;
+                state = new State(c, '*');
+                i++;
             } else {
-                start = new State(c);   // consumes one character: 'a'
-                State accept = new State((char) 0, true);  // ε accept (no transitions)
-                start.out1 = accept;
-                last = accept;
-                prev = start;
+                state = new State(c);
             }
+            if (last != null) {
 
+                last.next = state;
+                last = state;
+            } else {
+                start = state;
+                last = start;
+            }
         }
-
-        if (last != null) {
-            last.isAccept = true;
-        }
-
+        last.next = new State('@', true);
         return start;
     }
 
@@ -179,29 +134,50 @@ public class RegularExpressionMatcher {
     }
 
     public static void main(String[] args) {
+        test1();
+        test2();
+        test3();
+        test4();
+    }
+
+    private static void test1() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("abc");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertFalse(matcher.match("a"));
+        Assertions.assertFalse(matcher.match("ab"));
+        Assertions.assertTrue(matcher.match("abc"));
+        Assertions.assertFalse(matcher.match("b"));
+        Assertions.assertFalse(matcher.match("c"));
+
+    }
+
+    private static void test2() {
         RegularExpressionMatcher matcher = new RegularExpressionMatcher("a*");
         Assertions.assertFalse(matcher.match(""));
-        Assertions.assertTrue(matcher.match("aa"));
+        Assertions.assertTrue(matcher.match("a"));
         Assertions.assertTrue(matcher.match("aa"));
         Assertions.assertTrue(matcher.match("aaa"));
         Assertions.assertFalse(matcher.match("b"));
         Assertions.assertFalse(matcher.match("abxxxxxxx"));
+    }
 
-        matcher = new RegularExpressionMatcher("a");
+    private static void test3() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("a");
         Assertions.assertFalse(matcher.match(""));
         Assertions.assertTrue(matcher.match("a"));
         Assertions.assertFalse(matcher.match("aa"));
         Assertions.assertFalse(matcher.match("b"));
         Assertions.assertFalse(matcher.match("abxxxxxxx"));
+    }
 
-        matcher = new RegularExpressionMatcher("a*b");
+    private static void test4() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("a*b");
         Assertions.assertFalse(matcher.match(""));
         Assertions.assertTrue(matcher.match("ab"));
         Assertions.assertTrue(matcher.match("aab"));
         Assertions.assertTrue(matcher.match("aaab"));
-        Assertions.assertFalse(matcher.match("b"));
+        Assertions.assertTrue(matcher.match("b"));
         Assertions.assertFalse(matcher.match("abxxxxxxx"));
     }
-
 
 }
