@@ -270,12 +270,12 @@ public class RegularExpressionMatcher {
 
     private static void test9() {
         RegularExpressionMatcher matcher = new RegularExpressionMatcher("a.*.");
-//        Assertions.assertFalse(matcher.match(""));
-//        Assertions.assertFalse(matcher.match("cb"));
-//        Assertions.assertTrue(matcher.match("acb"));
-//        Assertions.assertTrue(matcher.match("acxb"));
-//        Assertions.assertTrue(matcher.match("aqwertx"));
-//        Assertions.assertFalse(matcher.match("a"));
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertFalse(matcher.match("cb"));
+        Assertions.assertTrue(matcher.match("acb"));
+        Assertions.assertTrue(matcher.match("acxb"));
+        Assertions.assertTrue(matcher.match("aqwertx"));
+        Assertions.assertFalse(matcher.match("a"));
         Assertions.assertTrue(matcher.match("ax"));
         Assertions.assertFalse(matcher.match("b"));
     }
@@ -362,7 +362,7 @@ public class RegularExpressionMatcher {
 
     private static void test17() {
         RegularExpressionMatcher matcher = new RegularExpressionMatcher("ab*");
-//        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertFalse(matcher.match(""));
         Assertions.assertTrue(matcher.match("a"));
         Assertions.assertFalse(matcher.match("aa"));
         Assertions.assertTrue(matcher.match("ab"));
