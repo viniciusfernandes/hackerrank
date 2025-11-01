@@ -26,10 +26,15 @@ public class RegularExpressionMatcher {
             this.isAccept = isAccept;
         }
 
+        boolean isLastOperator() {
+            return next != null && next.isAccept;
+        }
+
         @Override
         public String toString() {
             return "State{" +
                     "c=" + c +
+                    ", op=" + op +
                     ", isAccept=" + isAccept +
                     '}';
         }
@@ -50,41 +55,39 @@ public class RegularExpressionMatcher {
         if (state == null) {
             return false;
         }
-        if (state.isAccept && i == input.length()) {
-            return true;
+        if (i >= input.length()) {
+            while (state.op == '*') {
+                state = state.next;
+            }
+            return state.isAccept;
         }
         if (state.op == '*') {
-            if (state.c == '.' && state.next.c != '.') {
+            if (state.c == '.') {
+                if (state.isLastOperator()) {
+                    return true;
+                }
+                // this is the case a.*.
+                if (state.next.c == '.') {
+                    return true;
+                }
                 while (i < input.length() && state.next.c != input.charAt(i)) {
                     i++;
                 }
                 return match(state.next, input, i);
-            } else if (state.c == '.' && state.next.c == '.') {
-                State last = state;
-                do {
-                    if (last.isAccept) {
-                        return true;
-                    }
-                    last = last.next;
-                } while (last.c == '.' || last.op == '*');
-
-                while (i < input.length() && last.c != input.charAt(i)) {
-                    i++;
-                }
-                return match(last, input, i);
-            } else if (state.next.c == '.') {
-                while (i < input.length() && state.c == input.charAt(i)) {
-                    i++;
-                }
-                return match(state.next, input, i);
-            } else if (state.next.c == input.charAt(i)) {
-                return match(state.next, input, i);
             } else {
-                while (i < input.length() && state.c == input.charAt(i)) {
+                if (state.c != input.charAt(i)) {
+                    return match(state.next, input, i);
+                }
+                int stop = input.length() - 1;
+                if (!state.isLastOperator()) {
+                    stop--;
+                }
+                while (i <= stop && state.c == input.charAt(i)) {
                     i++;
                 }
+                return match(state.next, input, i);
             }
-            return match(state.next, input, i);
+
         }
         if (i < input.length() && (state.c == '.' || state.c == input.charAt(i))) {
             return match(state.next, input, i + 1);
@@ -103,6 +106,13 @@ public class RegularExpressionMatcher {
         for (int i = 0; i < chars.length; i++) {
             char c = chars[i];
             State state;
+            boolean isLast = i == chars.length - 1;
+            if (last != null && last.op == '*' && c == '*') {
+                continue;
+            }
+            if (last != null && last.op == '*' && last.c == '.' && c == '.' && !isLast) {
+                continue;
+            }
             if (i + 1 < chars.length && chars[i + 1] == '*') {
                 if (c == '*' && last == null) {
                     throw new IllegalStateException("Invalid pattern: '*' cannot appear first");
@@ -113,7 +123,6 @@ public class RegularExpressionMatcher {
                 state = new State(c);
             }
             if (last != null) {
-
                 last.next = state;
                 last = state;
             } else {
@@ -165,6 +174,16 @@ public class RegularExpressionMatcher {
         test5();
         test6();
         test7();
+        test8();
+        test9();
+        test10();
+        test11();
+        test12();
+        test13();
+        test14();
+        test15();
+        test16();
+        test17();
     }
 
     private static void test1() {
@@ -187,6 +206,7 @@ public class RegularExpressionMatcher {
         Assertions.assertFalse(matcher.match("b"));
         Assertions.assertFalse(matcher.match("abxxxxxxx"));
     }
+
 
     private static void test3() {
         RegularExpressionMatcher matcher = new RegularExpressionMatcher("a");
@@ -217,9 +237,10 @@ public class RegularExpressionMatcher {
 
     private static void test6() {
         RegularExpressionMatcher matcher = new RegularExpressionMatcher("a*.b");
+        Assertions.assertTrue(matcher.match("acb"));
         Assertions.assertFalse(matcher.match(""));
         Assertions.assertTrue(matcher.match("cb"));
-        Assertions.assertTrue(matcher.match("acb"));
+
         Assertions.assertFalse(matcher.match("acxb"));
         Assertions.assertFalse(matcher.match("a"));
         Assertions.assertFalse(matcher.match("b"));
@@ -236,4 +257,118 @@ public class RegularExpressionMatcher {
         Assertions.assertFalse(matcher.match("b"));
     }
 
+    private static void test8() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("a.*.*.*b");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertFalse(matcher.match("cb"));
+        Assertions.assertTrue(matcher.match("acb"));
+        Assertions.assertTrue(matcher.match("acxb"));
+        Assertions.assertTrue(matcher.match("aqwertxb"));
+        Assertions.assertFalse(matcher.match("a"));
+        Assertions.assertFalse(matcher.match("b"));
+    }
+
+    private static void test9() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("a.*.");
+//        Assertions.assertFalse(matcher.match(""));
+//        Assertions.assertFalse(matcher.match("cb"));
+//        Assertions.assertTrue(matcher.match("acb"));
+//        Assertions.assertTrue(matcher.match("acxb"));
+//        Assertions.assertTrue(matcher.match("aqwertx"));
+//        Assertions.assertFalse(matcher.match("a"));
+        Assertions.assertTrue(matcher.match("ax"));
+        Assertions.assertFalse(matcher.match("b"));
+    }
+
+    private static void test10() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("a..");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertFalse(matcher.match("cb"));
+        Assertions.assertTrue(matcher.match("acb"));
+        Assertions.assertFalse(matcher.match("acxb"));
+        Assertions.assertFalse(matcher.match("a"));
+    }
+
+    private static void test11() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("..");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertTrue(matcher.match("cb"));
+        Assertions.assertTrue(matcher.match("xz"));
+        Assertions.assertFalse(matcher.match("acx"));
+        Assertions.assertFalse(matcher.match("a"));
+    }
+
+    private static void test12() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("a*a");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertTrue(matcher.match("a"));
+        Assertions.assertTrue(matcher.match("aa"));
+        Assertions.assertTrue(matcher.match("aaa"));
+        Assertions.assertFalse(matcher.match("b"));
+        Assertions.assertFalse(matcher.match("abxxxxxxx"));
+    }
+
+    private static void test13() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("aa*a");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertFalse(matcher.match("a"));
+        Assertions.assertTrue(matcher.match("aa"));
+        Assertions.assertTrue(matcher.match("aaa"));
+        Assertions.assertTrue(matcher.match("aaaa"));
+        Assertions.assertFalse(matcher.match("b"));
+        Assertions.assertFalse(matcher.match("abxxxxxxx"));
+    }
+
+    private static void test14() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("aa*b");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertFalse(matcher.match("a"));
+        Assertions.assertFalse(matcher.match("aa"));
+        Assertions.assertTrue(matcher.match("ab"));
+        Assertions.assertTrue(matcher.match("aab"));
+        Assertions.assertTrue(matcher.match("aaaab"));
+        Assertions.assertFalse(matcher.match("b"));
+        Assertions.assertFalse(matcher.match("abx"));
+    }
+
+    private static void test15() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("a**b");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertFalse(matcher.match("a"));
+        Assertions.assertFalse(matcher.match("aa"));
+        Assertions.assertTrue(matcher.match("ab"));
+        Assertions.assertTrue(matcher.match("aab"));
+        Assertions.assertTrue(matcher.match("aaaab"));
+        Assertions.assertTrue(matcher.match("b"));
+        Assertions.assertFalse(matcher.match("abx"));
+    }
+
+    private static void test16() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("ab*a*c*a");
+        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertTrue(matcher.match("aaa"));
+        Assertions.assertTrue(matcher.match("aa"));
+        Assertions.assertTrue(matcher.match("aba"));
+        Assertions.assertFalse(matcher.match("ab"));
+        Assertions.assertTrue(matcher.match("abca"));
+        Assertions.assertTrue(matcher.match("aca"));
+        Assertions.assertTrue(matcher.match("aaca"));
+        Assertions.assertTrue(matcher.match("abbaacca"));
+        Assertions.assertTrue(matcher.match("aaacca"));
+        Assertions.assertTrue(matcher.match("abbcca"));
+        Assertions.assertTrue(matcher.match("acca"));
+        Assertions.assertTrue(matcher.match("abba"));
+    }
+
+    private static void test17() {
+        RegularExpressionMatcher matcher = new RegularExpressionMatcher("ab*");
+//        Assertions.assertFalse(matcher.match(""));
+        Assertions.assertTrue(matcher.match("a"));
+        Assertions.assertFalse(matcher.match("aa"));
+        Assertions.assertTrue(matcher.match("ab"));
+        Assertions.assertTrue(matcher.match("abbb"));
+        Assertions.assertFalse(matcher.match("aab"));
+        Assertions.assertFalse(matcher.match("b"));
+        Assertions.assertFalse(matcher.match("abx"));
+    }
 }
