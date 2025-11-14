@@ -6,6 +6,40 @@ import java.util.*;
 
 class LargestHour {
     public String largestTimeFromDigits(int[] arr) {
+        int max = -1;
+        for (int i = 0; i < arr.length; i++) {
+            for (int j = 0; j < arr.length; j++) {
+                if (i == j) {
+                    continue;
+                }
+                int h = arr[i] * 10 + arr[j];
+                for (int k = 0; k < arr.length; k++) {
+                    if (k == j || k == i) {
+                        continue;
+                    }
+                    for (int l = 0; l < arr.length; l++) {
+                        if (l == k || l == j || l == i) {
+                            continue;
+                        }
+                        int m = arr[k] * 10 + arr[l];
+                        if (h >= 24 || m >= 60) {
+                            continue;
+                        }
+                        int tot = h * 60 + m;
+                        if (tot > max) {
+                            max = tot;
+                        }
+                    }
+                }
+            }
+        }
+        if (max == -1) {
+            return "";
+        }
+        return String.format("%02d:%02d", max / 60, max % 60);
+    }
+
+    public String largestTimeFromDigitsOld(int[] arr) {
         List<int[]> hours = new ArrayList<>();
         List<int[]> minutes = new ArrayList<>();
         for (int i = 0; i < arr.length; i++) {
