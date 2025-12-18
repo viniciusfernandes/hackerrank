@@ -2,37 +2,36 @@ package br.com.challanges.leetcode;
 
 import br.com.challanges.algorithms.datastructure.utils.Assertions;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
 
 public class OpenParenthesis {
 
 
     public boolean isVAlid(String s) {
-        char[] p = s.toCharArray();
-        Queue<Character> q = new LinkedList<>();
-        Map<Character, Character> close = new HashMap<>();
-        close.put('(', ')');
-        close.put('[', ']');
-        close.put('{', '}');
-        for (int i = 0; i < p.length; i++) {
-            char c = p[i];
-            if (i + 1 < p.length && isOpen(c) && isClose(p[i + 1]) && close.get(c) != p[i + 1]) {
-                return false;
-            } else if (isClose(c)) {
-                q.poll();
-            } else if (isOpen(c)) {
+        Stack<Character> q = new Stack<>();
+        Map<Character, Character> closureOf = new HashMap<>();
+        closureOf.put('(', ')');
+        closureOf.put('[', ']');
+        closureOf.put('{', '}');
+        for (char c : s.toCharArray()) {
+            if (!isClose(c)) {
                 q.add(c);
+                continue;
             }
+            Character x = q.pop();
+            if (closureOf.get(x) == c) {
+                continue;
+            }
+            return false;
         }
         return q.isEmpty();
     }
 
-    private boolean isOpen(char c) {
-        return c == '[' || c == '{' || c == '(';
-    }
 
     private boolean isClose(char c) {
-        return !isOpen(c);
+        return c == '}' || c == ']' || c == ')';
     }
 
     public static void main(String[] args) {
