@@ -1,5 +1,7 @@
 package br.com.challanges.algorithms.sorting;
 
+import br.com.challanges.algorithms.datastructure.utils.Assertions;
+
 import java.util.Arrays;
 
 public class MergeSort {
@@ -18,7 +20,8 @@ public class MergeSort {
     }
 
     private static void merge(int[] a0, int[] a1, int[] a) {
-        int i0 = 0, i1 = 0;
+        int i0 = 0;
+        int i1 = 0;
         for (int i = 0; i < a.length; i++) {
             if (i0 == a0.length) {
                 a[i] = a1[i1++];
@@ -33,10 +36,11 @@ public class MergeSort {
     }
 
     public static void main(String[] args) {
-        int[] values = new int[]{-10,100, 2, 77, 3, -1};
+        int[] values = new int[]{-10, 100, 2, 77, 3, -1};
+        int[] values2 = new int[]{1, 2, 3, 4};
+
         sort(values);
-        for (int i = 0; i < values.length; i++) {
-            System.out.print(values[i] + " ");
-        }
+        Assertions.assertEquals(new int[]{-10, -1, 2, 3, 77, 100}, values);
+        Assertions.assertEquals(new int[]{1, 2, 3, 4}, values2);
     }
 }

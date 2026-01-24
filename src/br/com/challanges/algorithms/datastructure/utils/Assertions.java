@@ -24,6 +24,18 @@ public class Assertions {
         }
     }
 
+    public static void assertEquals(int[] a, int[] b) {
+        if (a.length != b.length) {
+            throw new RuntimeException("As listas devem ter o mesmo tamanho");
+        }
+        for (int j = 0; j < a.length; j++) {
+            if (a[j] != b[j]) {
+                throw new RuntimeException("Elementos do indice=" + j + " nao são iguais. Valor1=" + a[j] + " e valor2=" + b[j]);
+            }
+        }
+    }
+
+
     public static void assertTrue(boolean b) {
         if (!b) {
             throw new RuntimeException("O valor experado=true. Valor atual=false");
