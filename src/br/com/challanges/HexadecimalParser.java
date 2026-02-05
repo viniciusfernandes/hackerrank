@@ -50,14 +50,22 @@ class HexadecimalParser {
 
 
     public static String toHexa(int n) {
+        return toBase(n, 16);
+    }
+
+    public static String toBinary(int n) {
+        return toBase(n, 2);
+    }
+
+    private static String toBase(int n, int base) {
         if (n == 0) {
             return map.get(0);
         }
         String H = "";
         while (n > 0) {
-            int r = n % 16;
+            int r = n % base;
             n -= r;
-            n /= 16;
+            n /= base;
             String t = map.get(r);
             t += H;
             H = t;
@@ -90,6 +98,12 @@ class HexadecimalParser {
     public static void main(String[] args) {
         assertToHexa();
         assertFromHexa();
+        assertToBinary();
+    }
+
+    private static void assertToBinary() {
+        Assertions.assertEquals("101", toBinary(5));
+        Assertions.assertEquals("100000", toBinary(32));
     }
 
     private static void assertToHexa() {
