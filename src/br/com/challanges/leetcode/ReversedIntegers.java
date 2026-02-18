@@ -1,18 +1,6 @@
 package br.com.challanges.leetcode;
 
-import java.math.*;
-
-class ListNode {
-    int val;
-    ListNode next;
-
-    ListNode() {
-    }
-
-    ListNode(int val) {
-        this.val = val;
-    }
-}
+import java.math.BigInteger;
 
 class ReversedIntegers {
     public ListNode addTwoNumbers(ListNode l1, ListNode l2) {

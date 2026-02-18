@@ -43,7 +43,7 @@ public class TwoSum {
     }
 
     public static void main(String[] args) {
-        int[] result = twoSum(new int[]{2, 5, 5, 11}, 10);
+        int[] result = twoSum(new int[]{2, 5, 5, 11, 0, 10}, 10);
         System.out.println(Arrays.toString(result));
     }
 }
