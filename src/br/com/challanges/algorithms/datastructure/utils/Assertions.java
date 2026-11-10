@@ -1,10 +1,8 @@
 package br.com.challanges.algorithms.datastructure.utils;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Executable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class Assertions {
     public static void assertEquals(Object a, Object b) {
@@ -13,8 +11,12 @@ public class Assertions {
         }
     }
 
-    public static <T> void assertEquals(List<T> a, List<T> b) {
-        assertEquals(a.toArray(), b.toArray());
+    public static <T> void assertEquals(Collection<T> a, Collection<T> b) {
+        String A = stringfy(a);
+        String B = stringfy(b);
+        if (!A.equals(B)) {
+            throw new RuntimeException("As listas nao sao iguais.\nValores esperado:%s\nValor atual:%s".formatted(A, B));
+        }
     }
 
     public static <T extends Throwable> void assertThrows(Class<T> expectedClassException, Runnable executable) {
@@ -41,9 +43,10 @@ public class Assertions {
                 && b.getClass().isArray();
     }
 
+    @Deprecated
     public static <T> void assertEquals(T[] a, T[] b) {
         if (a.length != b.length) {
-            throw new RuntimeException("As listas devem ter o mesmo tamanho");
+            throw new RuntimeException("As listas devem ter o mesmo tamanho.\n Valores esperado:%s\nValor atual:%s".formatted(a, b));
         }
         for (int j = 0; j < a.length; j++) {
             if (bothArrays(a[j], b[j])) {
@@ -52,6 +55,24 @@ public class Assertions {
                 throw new RuntimeException("Elementos do indice=" + j + " nao são iguais. Valor1=" + a[j] + " e valor2=" + b[j]);
             }
         }
+    }
+
+    private static String stringfy(Collection<?> c) {
+        StringBuilder s = new StringBuilder();
+        s.append("[");
+        int i = 0;
+        for (Object o : c) {
+            i++;
+            if (o instanceof Collection<?>) {
+                s.append(stringfy((Collection<?>) o));
+            } else {
+                s.append(o);
+            }
+            if (i < c.size()) {
+                s.append(", ");
+            }
+        }
+        return s.append("]").toString();
     }
 
     private static void assertArrayEquals(Object a, Object b) {
@@ -95,4 +116,5 @@ public class Assertions {
             throw new RuntimeException("O valor experado=false. Valor atual=true");
         }
     }
+
 }
