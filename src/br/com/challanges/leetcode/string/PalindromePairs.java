@@ -31,28 +31,33 @@ class PalindromePairs {
 
         Pairs pairs = new Pairs();
         for (int i = 0; i < words.length; i++) {
-            int j = 1;
+            if (words[i].isEmpty()) {
+                continue;
+            }
+            int j = words[i].length();
             do {
-                String prefix = words[i].isEmpty() ? words[i] : words[i].substring(0, j);
+                String prefix = words[i].substring(0, j);
+                String suffix = words[i].substring(j);
+
                 String reversedPrefix = new StringBuilder(prefix).reverse().toString();
-                if (indexesMap.containsKey(reversedPrefix) && isPalindrome(words[i] + reversedPrefix)) {
+                if (indexesMap.containsKey(reversedPrefix) && isPalindrome(suffix)) {
                     for (Integer index : indexesMap.get(reversedPrefix)) {
                         if (i != index) {
                             pairs.add(i, index);
                         }
                     }
                 }
-                String suffix = words[i].isEmpty() ? words[i] : words[i].substring(j);
+
                 String reversedSuffix = new StringBuilder(suffix).reverse().toString();
-                if (indexesMap.containsKey(reversedSuffix) && isPalindrome(reversedSuffix + words[i])) {
+                if (indexesMap.containsKey(reversedSuffix) && isPalindrome(prefix)) {
                     for (Integer index : indexesMap.get(reversedSuffix)) {
                         if (i != index) {
                             pairs.add(index, i);
                         }
                     }
                 }
-                j++;
-            } while (j <= words[i].length());
+                j--;
+            } while (j >= 0);
         }
 
         if (indexesMap.containsKey("")) {
